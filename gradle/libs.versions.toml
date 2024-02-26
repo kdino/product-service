@@ -1,0 +1,60 @@
+[versions]
+kotlin = "1.8.22"
+kotlinxCoroutine = "1.5.2"
+arrow = "1.2.1"
+kotest = "5.6.2"
+ktor = "1.6.8"
+kotlinter = "3.15.0"
+jasyncPostgresql = "2.0.8"
+jasyncMysql = "2.0.8"
+kotlinxDateTime = "0.4.0"
+testContainer = "1.17.6"
+mysqlConnector = "5.1.34"
+kotestAssertionsArrow = "1.3.3"
+mockk = "1.12.3"
+
+[libraries]
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin"}
+
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref ="ktor"}
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref ="ktor"}
+ktor-serialization = { module = "io.ktor:ktor-serialization", version.ref ="ktor"}
+
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor"}
+ktor-client-cio = { module = "io.ktor:ktor-client-cio" , version.ref = "ktor"}
+ktor-client-serialization = { module = "io.ktor:ktor-client-serialization", version.ref ="ktor"}
+ktor-server-tests = { module = "io.ktor:ktor-server-tests" , version.ref ="ktor"}
+
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutine"}
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutine"}
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime" , version.ref = "kotlinxDateTime"}
+
+arrow-core = { module = "io.arrow-kt:arrow-core" , version.ref="arrow" }
+arrow-fx-coroutines = { module = "io.arrow-kt:arrow-fx-coroutines" , version.ref="arrow" }
+
+kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref= "kotest"}
+kotest-property = { module = "io.kotest:kotest-property", version.ref= "kotest"}
+kotest-assertions-arrow = { module = "io.kotest.extensions:kotest-assertions-arrow" , version.ref = "kotestAssertionsArrow" }
+
+jasync-postgresql = { module = "com.github.jasync-sql:jasync-postgresql", version.ref="jasyncPostgresql"}
+
+mockk = { module = "io.mockk:mockk" , version.ref = "mockk" }
+
+test-container-testcontainers = { module = "org.testcontainers:testcontainers" , version.ref = "testContainer"}
+test-container-postgresql = { module = "org.testcontainers:postgresql" , version.ref = "testContainer"}
+test-container-mysql = { module = "org.testcontainers:mysql" , version.ref = "testContainer"}
+mysql-connector-java = { module = "mysql:mysql-connector-java" , version.ref = "mysqlConnector"}
+
+[bundles]
+ktor = ["ktor-server-core","ktor-server-netty","ktor-serialization"]
+ktor-client = ["ktor-client-core", "ktor-client-cio","ktor-client-serialization"]
+arrow = ["arrow-core","arrow-fx-coroutines"]
+kotest = ["kotest-runner-junit5", "kotest-property"]
+
+testcontainers = [ "test-container-testcontainers", "test-container-postgresql","test-container-mysql"]
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref="kotlin"}
+kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
+java-text-fixtures = { id = "org.gradle.java-test-fixtures" }
