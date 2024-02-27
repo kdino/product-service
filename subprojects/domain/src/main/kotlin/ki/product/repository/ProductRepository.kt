@@ -6,6 +6,7 @@ import ki.product.model.Product
 
 interface ProductRepository {
     fun getCheapestItemByCategory(category: Product.Category): Effect<Failure, CategoryItem>
+    fun getMostExpensiveItemByCategory(category: Product.Category): Effect<Failure, CategoryItem>
     fun getCheapestBrand(): Effect<Failure, Product>
 
     sealed class Failure(

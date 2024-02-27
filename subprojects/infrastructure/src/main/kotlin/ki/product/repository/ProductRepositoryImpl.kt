@@ -34,6 +34,25 @@ class ProductRepositoryImpl(
         }
     }
 
+    override fun getMostExpensiveItemByCategory(category: Product.Category): Effect<Failure, CategoryItem> = effect {
+        try {
+            val result = databaseFactory.dbExec {
+                Products.selectAll()
+                    .orderBy(category.toEntityColumn(), SortOrder.DESC).limit(1)
+                    .first()
+            }
+
+            CategoryItem(
+                brandName = result[Products.brandName],
+                price = result[category.toEntityColumn()],
+            )
+        } catch (e: NoSuchElementException) {
+            raise(Failure.NoData())
+        } catch (e: Exception) {
+            raise(Failure.DbError(e.message, e))
+        }
+    }
+
     override fun getCheapestBrand(): Effect<Failure, Product> = effect {
         try {
             val result = databaseFactory.dbExec {

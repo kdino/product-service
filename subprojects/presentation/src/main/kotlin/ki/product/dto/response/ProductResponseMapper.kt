@@ -1,10 +1,11 @@
 package ki.product.dto.response
 
 import ki.product.model.Product
+import ki.product.service.ProductService.CategorySummaryResult
 import ki.product.service.ProductService.CheapestBrandResult
 import ki.product.service.ProductService.CheapestCombinationResult
-import ki.product.dto.response.CheapestCombinationResponse.CategoryItem as CategoryItemDto
-import ki.product.dto.response.CheapestBrandResponse.BrandItem as BrandItemDto
+import ki.product.dto.response.BrandItem as BrandItemDto
+import ki.product.dto.response.CategoryItem as CategoryItemDto
 
 fun CheapestCombinationResult.toResponse() =
     CheapestCombinationResponse(
@@ -50,11 +51,24 @@ fun CheapestBrandResult.toResponse() =
             brandItems = brandItems.map {
                 BrandItemDto(
                     category = it.category.toResponse(),
-                    price = it.price
+                    price = it.price,
                 )
             },
-            total = total
-        )
+            total = total,
+        ),
+    )
+
+fun CategorySummaryResult.toResponse() =
+    CategorySummaryResponse(
+        category = category.toResponse(),
+        cheapest = CategoryItemDto(
+            brandName = cheapest.brandName,
+            price = cheapest.price,
+        ),
+        mostExpensive = CategoryItemDto(
+            brandName = mostExpensive.brandName,
+            price = mostExpensive.price,
+        ),
     )
 
 fun Product.Category.toResponse() =

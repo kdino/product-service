@@ -6,8 +6,10 @@ import io.ktor.application.call
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.get
+import ki.product.dto.error.BadRequestErrorResponse
 import ki.product.dto.error.DataNotFoundResponse
 import ki.product.dto.error.InternalErrorResponse
+import ki.product.dto.request.toCategory
 import ki.product.dto.response.toResponse
 import ki.product.respondError
 import ki.product.service.ProductService
@@ -45,6 +47,28 @@ object ProductRouting {
             }.fold(
                 recover = {
                     println(it.detail)
+                    call.respondError(it)
+                },
+                transform = {
+                    call.respond(it.toResponse())
+                },
+            )
+        }
+
+        get("/products/category/{category}") {
+            val category = call.parameters["category"].toCategory()
+                ?: return@get call.respondError(BadRequestErrorResponse("올바른 카테고리가 아닙니다."))
+
+            productService.getCategorySummary(category).mapError {
+                when (it) {
+                    is ProductService.GetCategorySummaryFailure.DataNotFound ->
+                        DataNotFoundResponse()
+
+                    is ProductService.GetCategorySummaryFailure.InternalServerError ->
+                        InternalErrorResponse(it.message)
+                }
+            }.fold(
+                recover = {
                     call.respondError(it)
                 },
                 transform = {

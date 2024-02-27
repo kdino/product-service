@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CheapestBrandResponse(
     @SerialName("최저가")
-    val cheapestPrice: CheapestPrice
+    val cheapestPrice: CheapestPrice,
 ) {
     @Serializable
     data class CheapestPrice(
@@ -15,14 +15,6 @@ data class CheapestBrandResponse(
         @SerialName("카테고리")
         val brandItems: List<BrandItem>,
         @SerialName("총액")
-        val total: Int
-    )
-
-    @Serializable
-    data class BrandItem(
-        @SerialName("카테고리")
-        val category: String,
-        @SerialName("가격")
-        val price: Int
+        val total: Int,
     )
 }

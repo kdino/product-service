@@ -32,8 +32,10 @@ data class Product(
             cap = command.cap,
             socks = command.socks,
             accessory = command.accessory,
-            total = (command.top + command.outer + command.pants + command.sneakers +
-                    command.bag + command.cap + command.socks + command.accessory),
+            total = (
+                command.top + command.outer + command.pants + command.sneakers +
+                    command.bag + command.cap + command.socks + command.accessory
+                ),
             created = Clock.System.now(),
         )
 
@@ -48,7 +50,7 @@ data class Product(
             socks = command.socks ?: socks,
             accessory = command.accessory ?: accessory,
             total = (command.top ?: 0) + (command.outer ?: 0) + (command.pants ?: 0) + (command.sneakers ?: 0) +
-                    (command.bag ?: 0) + (command.cap ?: 0) + (command.socks ?: 0) + (command.accessory ?: 0)
+                (command.bag ?: 0) + (command.cap ?: 0) + (command.socks ?: 0) + (command.accessory ?: 0),
         )
 
     data class CreateCommand(

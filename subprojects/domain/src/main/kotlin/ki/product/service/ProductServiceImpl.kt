@@ -2,14 +2,16 @@ package ki.product.service
 
 import arrow.core.raise.Effect
 import arrow.core.raise.effect
-import arrow.core.raise.getOrElse
+import arrow.core.raise.mapError
 import ki.product.model.BrandItem
 import ki.product.model.CategoryItem
 import ki.product.model.Product
 import ki.product.repository.ProductRepository
+import ki.product.service.ProductService.CategorySummaryResult
 import ki.product.service.ProductService.CheapestBrandResult
 import ki.product.service.ProductService.CheapestCombinationResult
 import ki.product.service.ProductService.Failure
+import ki.product.service.ProductService.GetCategorySummaryFailure
 
 class ProductServiceImpl(
     private val productRepository: ProductRepository,
@@ -18,7 +20,7 @@ class ProductServiceImpl(
     override fun getCheapestCombination(): Effect<Failure, CheapestCombinationResult> = effect {
         val cheapestPriceMap = Product.Category.values().associateWith { category ->
             productRepository.getCheapestItemByCategory(category)
-                .getOrElse {
+                .mapError {
                     when (it) {
                         is ProductRepository.Failure.DbError ->
                             raise(Failure.InternalServerError(it.message))
@@ -26,7 +28,7 @@ class ProductServiceImpl(
                         is ProductRepository.Failure.NoData ->
                             raise(Failure.DataNotFound(it.message))
                     }
-                }
+                }.bind()
         }
         val totalPrice = cheapestPriceMap.values.sumOf { it.price }
 
@@ -84,7 +86,7 @@ class ProductServiceImpl(
     }
 
     override fun getCheapestBrand(): Effect<Failure, CheapestBrandResult> = effect {
-        val product = productRepository.getCheapestBrand().getOrElse {
+        val product = productRepository.getCheapestBrand().mapError {
             when (it) {
                 is ProductRepository.Failure.DbError ->
                     raise(Failure.InternalServerError(it.message))
@@ -92,7 +94,7 @@ class ProductServiceImpl(
                 is ProductRepository.Failure.NoData ->
                     raise(Failure.DataNotFound(it.message))
             }
-        }
+        }.bind()
 
         val brandItems = listOf(
             BrandItem(
@@ -132,7 +134,37 @@ class ProductServiceImpl(
         CheapestBrandResult(
             brandName = product.brandName,
             brandItems = brandItems,
-            total = product.total
+            total = product.total,
+        )
+    }
+
+    override fun getCategorySummary(
+        category: Product.Category,
+    ): Effect<GetCategorySummaryFailure, CategorySummaryResult> = effect {
+        val cheapest = productRepository.getCheapestItemByCategory(category).mapError {
+            when (it) {
+                is ProductRepository.Failure.DbError ->
+                    raise(GetCategorySummaryFailure.InternalServerError(it.message))
+
+                is ProductRepository.Failure.NoData ->
+                    raise(GetCategorySummaryFailure.DataNotFound(it.message))
+            }
+        }.bind()
+
+        val mostExpensive = productRepository.getMostExpensiveItemByCategory(category).mapError {
+            when (it) {
+                is ProductRepository.Failure.DbError ->
+                    raise(GetCategorySummaryFailure.InternalServerError(it.message))
+
+                is ProductRepository.Failure.NoData ->
+                    raise(GetCategorySummaryFailure.DataNotFound(it.message))
+            }
+        }.bind()
+
+        CategorySummaryResult(
+            category = category,
+            cheapest = cheapest,
+            mostExpensive = mostExpensive,
         )
     }
 }

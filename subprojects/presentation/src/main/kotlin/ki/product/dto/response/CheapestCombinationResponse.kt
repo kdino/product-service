@@ -23,10 +23,4 @@ data class CheapestCombinationResponse(
     val accessory: CategoryItem,
     @SerialName("총액")
     val total: Int,
-) {
-    @Serializable
-    data class CategoryItem(
-        val brandName: String,
-        val price: Int,
-    )
-}
+)
