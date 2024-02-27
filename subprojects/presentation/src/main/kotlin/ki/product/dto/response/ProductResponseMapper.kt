@@ -6,6 +6,7 @@ import ki.product.service.ProductService.CheapestBrandResult
 import ki.product.service.ProductService.CheapestCombinationResult
 import ki.product.dto.response.BrandItem as BrandItemDto
 import ki.product.dto.response.CategoryItem as CategoryItemDto
+import ki.product.dto.response.ProductResponse.Product as ProductDto
 
 fun CheapestCombinationResult.toResponse() =
     CheapestCombinationResponse(
@@ -82,3 +83,24 @@ fun Product.Category.toResponse() =
         Product.Category.SOCKS -> "양말"
         Product.Category.ACCESSORY -> "액세서리"
     }
+
+fun Product.toResponse() =
+    ProductResponse(
+        result = "성공",
+        product = ProductDto(
+            id = id,
+            brandName = brandName,
+            top = top,
+            outer = outer,
+            pants = pants,
+            sneakers = sneakers,
+            bag = bag,
+            cap = cap,
+            socks = socks,
+            accessory = accessory,
+            total = total,
+            created = created,
+            modified = modified,
+            deleted = deleted,
+        ),
+    )

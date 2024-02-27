@@ -20,24 +20,26 @@ data class Product(
     val modified: Instant? = null,
     val deleted: Instant? = null,
 ) {
-    fun create(command: CreateCommand) =
-        Product(
-            id = Utils.generateId(this.javaClass.name),
-            brandName = command.brandName,
-            top = command.top,
-            outer = command.outer,
-            pants = command.pants,
-            sneakers = command.sneakers,
-            bag = command.bag,
-            cap = command.cap,
-            socks = command.socks,
-            accessory = command.accessory,
-            total = (
-                command.top + command.outer + command.pants + command.sneakers +
-                    command.bag + command.cap + command.socks + command.accessory
-                ),
-            created = Clock.System.now(),
-        )
+    companion object {
+        fun create(command: CreateCommand) =
+            Product(
+                id = Utils.generateId("product"),
+                brandName = command.brandName,
+                top = command.top,
+                outer = command.outer,
+                pants = command.pants,
+                sneakers = command.sneakers,
+                bag = command.bag,
+                cap = command.cap,
+                socks = command.socks,
+                accessory = command.accessory,
+                total = (
+                    command.top + command.outer + command.pants + command.sneakers +
+                        command.bag + command.cap + command.socks + command.accessory
+                    ),
+                created = Clock.System.now(),
+            )
+    }
 
     fun update(command: UpdateCommand) =
         copy(

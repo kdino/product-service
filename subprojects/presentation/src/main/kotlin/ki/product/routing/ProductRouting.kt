@@ -3,13 +3,18 @@ package ki.product.routing
 import arrow.core.raise.fold
 import arrow.core.raise.mapError
 import io.ktor.application.call
+import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.get
+import io.ktor.routing.post
 import ki.product.dto.error.BadRequestErrorResponse
+import ki.product.dto.error.DataAlreadyExistsErrorResponse
 import ki.product.dto.error.DataNotFoundResponse
 import ki.product.dto.error.InternalErrorResponse
+import ki.product.dto.request.CreateProductRequest
 import ki.product.dto.request.toCategory
+import ki.product.dto.request.toDomain
 import ki.product.dto.response.toResponse
 import ki.product.respondError
 import ki.product.service.ProductService
@@ -65,6 +70,27 @@ object ProductRouting {
                         DataNotFoundResponse()
 
                     is ProductService.GetCategorySummaryFailure.InternalServerError ->
+                        InternalErrorResponse(it.message)
+                }
+            }.fold(
+                recover = {
+                    call.respondError(it)
+                },
+                transform = {
+                    call.respond(it.toResponse())
+                },
+            )
+        }
+
+        post("/products") {
+            val createProductRequest = call.receive<CreateProductRequest>()
+
+            productService.createProduct(createProductRequest.toDomain()).mapError {
+                when (it) {
+                    is ProductService.CreateProductFailure.BrandNameAlreadyExists ->
+                        DataAlreadyExistsErrorResponse("Brand name already exists - ${it.message}")
+
+                    is ProductService.CreateProductFailure.InternalServerError ->
                         InternalErrorResponse(it.message)
                 }
             }.fold(

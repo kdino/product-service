@@ -22,10 +22,10 @@ class ProductServiceImpl(
             productRepository.getCheapestItemByCategory(category)
                 .mapError {
                     when (it) {
-                        is ProductRepository.Failure.DbError ->
+                        is ProductRepository.ReadFailure.DbError ->
                             raise(Failure.InternalServerError(it.message))
 
-                        is ProductRepository.Failure.NoData ->
+                        is ProductRepository.ReadFailure.NoData ->
                             raise(Failure.DataNotFound(it.message))
                     }
                 }.bind()
@@ -88,10 +88,10 @@ class ProductServiceImpl(
     override fun getCheapestBrand(): Effect<Failure, CheapestBrandResult> = effect {
         val product = productRepository.getCheapestBrand().mapError {
             when (it) {
-                is ProductRepository.Failure.DbError ->
+                is ProductRepository.ReadFailure.DbError ->
                     raise(Failure.InternalServerError(it.message))
 
-                is ProductRepository.Failure.NoData ->
+                is ProductRepository.ReadFailure.NoData ->
                     raise(Failure.DataNotFound(it.message))
             }
         }.bind()
@@ -143,20 +143,20 @@ class ProductServiceImpl(
     ): Effect<GetCategorySummaryFailure, CategorySummaryResult> = effect {
         val cheapest = productRepository.getCheapestItemByCategory(category).mapError {
             when (it) {
-                is ProductRepository.Failure.DbError ->
+                is ProductRepository.ReadFailure.DbError ->
                     raise(GetCategorySummaryFailure.InternalServerError(it.message))
 
-                is ProductRepository.Failure.NoData ->
+                is ProductRepository.ReadFailure.NoData ->
                     raise(GetCategorySummaryFailure.DataNotFound(it.message))
             }
         }.bind()
 
         val mostExpensive = productRepository.getMostExpensiveItemByCategory(category).mapError {
             when (it) {
-                is ProductRepository.Failure.DbError ->
+                is ProductRepository.ReadFailure.DbError ->
                     raise(GetCategorySummaryFailure.InternalServerError(it.message))
 
-                is ProductRepository.Failure.NoData ->
+                is ProductRepository.ReadFailure.NoData ->
                     raise(GetCategorySummaryFailure.DataNotFound(it.message))
             }
         }.bind()
@@ -166,5 +166,23 @@ class ProductServiceImpl(
             cheapest = cheapest,
             mostExpensive = mostExpensive,
         )
+    }
+
+    override fun createProduct(product: Product): Effect<ProductService.CreateProductFailure, Product> = effect {
+        productRepository.getProductByBrandName(product.brandName).mapError {
+            when (it) {
+                is ProductRepository.Failure.DbError ->
+                    raise(ProductService.CreateProductFailure.InternalServerError(it.message))
+            }
+        }.bind()?.let {
+            raise(ProductService.CreateProductFailure.BrandNameAlreadyExists(it.brandName))
+        }
+
+        productRepository.createProduct(product).mapError {
+            when (it) {
+                is ProductRepository.Failure.DbError ->
+                    raise(ProductService.CreateProductFailure.InternalServerError(it.message))
+            }
+        }.bind()
     }
 }

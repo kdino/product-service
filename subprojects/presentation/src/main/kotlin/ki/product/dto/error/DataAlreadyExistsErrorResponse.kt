@@ -5,8 +5,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
 @Serializable
-class DataNotFoundResponse(
-    override val detail: String? = "Data not found error",
+data class DataAlreadyExistsErrorResponse(
+    override val detail: String? = "Data already exists error",
     @Transient
-    override val statusCode: HttpStatusCode = HttpStatusCode.NoContent,
+    override val statusCode: HttpStatusCode = HttpStatusCode.Conflict,
 ) : BaseErrorResponse()

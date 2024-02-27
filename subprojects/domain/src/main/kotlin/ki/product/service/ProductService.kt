@@ -9,7 +9,7 @@ interface ProductService {
     fun getCheapestCombination(): Effect<Failure, CheapestCombinationResult>
     fun getCheapestBrand(): Effect<Failure, CheapestBrandResult>
     fun getCategorySummary(category: Product.Category): Effect<GetCategorySummaryFailure, CategorySummaryResult>
-
+    fun createProduct(product: Product): Effect<CreateProductFailure, Product>
     sealed class Failure(
         override val message: String?,
     ) : Throwable(message) {
@@ -30,6 +30,17 @@ interface ProductService {
         data class InternalServerError(
             override val message: String?,
         ) : GetCategorySummaryFailure(message)
+    }
+
+    sealed class CreateProductFailure(
+        override val message: String?,
+    ) : Throwable(message) {
+        data class BrandNameAlreadyExists(
+            override val message: String?,
+        ) : CreateProductFailure(message)
+        data class InternalServerError(
+            override val message: String?,
+        ) : CreateProductFailure(message)
     }
 
     data class CheapestCombinationResult(

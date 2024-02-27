@@ -7,15 +7,18 @@ import ki.product.entity.Products
 import ki.product.model.CategoryItem
 import ki.product.model.Product
 import ki.product.repository.ProductRepository.Failure
+import ki.product.repository.ProductRepository.ReadFailure
 import kotlinx.datetime.Instant
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 
 class ProductRepositoryImpl(
     private val databaseFactory: DatabaseFactory,
 ) : ProductRepository {
-    override fun getCheapestItemByCategory(category: Product.Category): Effect<Failure, CategoryItem> = effect {
+    override fun getCheapestItemByCategory(category: Product.Category): Effect<ReadFailure, CategoryItem> = effect {
         try {
             val result = databaseFactory.dbExec {
                 Products.selectAll()
@@ -28,32 +31,33 @@ class ProductRepositoryImpl(
                 price = result[category.toEntityColumn()],
             )
         } catch (e: NoSuchElementException) {
-            raise(Failure.NoData())
+            raise(ReadFailure.NoData())
         } catch (e: Exception) {
-            raise(Failure.DbError(e.message, e))
+            raise(ReadFailure.DbError(e.message, e))
         }
     }
 
-    override fun getMostExpensiveItemByCategory(category: Product.Category): Effect<Failure, CategoryItem> = effect {
-        try {
-            val result = databaseFactory.dbExec {
-                Products.selectAll()
-                    .orderBy(category.toEntityColumn(), SortOrder.DESC).limit(1)
-                    .first()
+    override fun getMostExpensiveItemByCategory(category: Product.Category): Effect<ReadFailure, CategoryItem> =
+        effect {
+            try {
+                val result = databaseFactory.dbExec {
+                    Products.selectAll()
+                        .orderBy(category.toEntityColumn(), SortOrder.DESC).limit(1)
+                        .first()
+                }
+
+                CategoryItem(
+                    brandName = result[Products.brandName],
+                    price = result[category.toEntityColumn()],
+                )
+            } catch (e: NoSuchElementException) {
+                raise(ReadFailure.NoData())
+            } catch (e: Exception) {
+                raise(ReadFailure.DbError(e.message, e))
             }
-
-            CategoryItem(
-                brandName = result[Products.brandName],
-                price = result[category.toEntityColumn()],
-            )
-        } catch (e: NoSuchElementException) {
-            raise(Failure.NoData())
-        } catch (e: Exception) {
-            raise(Failure.DbError(e.message, e))
         }
-    }
 
-    override fun getCheapestBrand(): Effect<Failure, Product> = effect {
+    override fun getCheapestBrand(): Effect<ReadFailure, Product> = effect {
         try {
             val result = databaseFactory.dbExec {
                 Products.selectAll()
@@ -63,7 +67,48 @@ class ProductRepositoryImpl(
 
             toDomainProduct(result)
         } catch (e: NoSuchElementException) {
-            raise(Failure.NoData())
+            raise(ReadFailure.NoData())
+        } catch (e: Exception) {
+            raise(ReadFailure.DbError(e.message, e))
+        }
+    }
+
+    override fun getProductByBrandName(brandName: String): Effect<Failure, Product?> = effect {
+        try {
+            val result = databaseFactory.dbExec {
+                Products.selectAll()
+                    .where(Products.brandName eq brandName)
+                    .first()
+            }
+
+            toDomainProduct(result)
+        } catch (e: NoSuchElementException) {
+            null
+        } catch (e: Exception) {
+            raise(Failure.DbError(e.message, e))
+        }
+    }
+
+    override fun createProduct(product: Product): Effect<Failure, Product> = effect {
+        try {
+            databaseFactory.dbExec {
+                Products.insert { products ->
+                    products[id] = product.id
+                    products[brandName] = product.brandName
+                    products[top] = product.top
+                    products[outer] = product.outer
+                    products[pants] = product.pants
+                    products[sneakers] = product.sneakers
+                    products[bag] = product.bag
+                    products[cap] = product.cap
+                    products[socks] = product.socks
+                    products[accessory] = product.accessory
+                    products[total] = product.total
+                    products[created] = product.created.toEpochMilliseconds()
+                }
+            }
+
+            product
         } catch (e: Exception) {
             raise(Failure.DbError(e.message, e))
         }
