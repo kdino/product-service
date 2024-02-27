@@ -1,8 +1,8 @@
 package ki.product.model
 
 import ki.product.common.Utils
-import java.time.LocalDateTime
-import java.time.ZoneOffset
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 data class Product(
     val id: String,
@@ -15,9 +15,9 @@ data class Product(
     val cap: Int,
     val socks: Int,
     val accessory: Int,
-    val created: LocalDateTime,
-    val modified: LocalDateTime? = null,
-    val deleted: LocalDateTime? = null,
+    val created: Instant,
+    val modified: Instant? = null,
+    val deleted: Instant? = null,
 ) {
     fun create(command: CreateCommand) =
         Product(
@@ -31,7 +31,7 @@ data class Product(
             cap = command.cap,
             socks = command.socks,
             accessory = command.accessory,
-            created = LocalDateTime.now(ZoneOffset.UTC),
+            created = Clock.System.now(),
         )
 
     fun update(command: UpdateCommand) =
@@ -68,4 +68,8 @@ data class Product(
         val socks: Int?,
         val accessory: Int?,
     )
+
+    enum class Category {
+        TOP, OUTER, PANTS, SNEAKERS, BAG, CAP, SOCKS, ACCESSORY
+    }
 }

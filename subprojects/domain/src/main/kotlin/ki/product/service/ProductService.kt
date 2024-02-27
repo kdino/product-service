@@ -1,6 +1,7 @@
 package ki.product.service
 
 import arrow.core.raise.Effect
+import ki.product.model.ProductSummary
 
 interface ProductService {
     fun getCheapestCombination(): Effect<Failure, CheapestCombinationResult>
@@ -8,6 +9,9 @@ interface ProductService {
     sealed class Failure(
         override val message: String?,
     ) : Throwable(message) {
+        data class DataNotFound(
+            override val message: String?,
+        ) : Failure(message)
         data class InternalServerError(
             override val message: String?,
         ) : Failure(message)
@@ -22,10 +26,6 @@ interface ProductService {
         val cap: ProductSummary,
         val socks: ProductSummary,
         val accessory: ProductSummary,
-    ) {
-        data class ProductSummary(
-            val brandName: String,
-            val price: Int,
-        )
-    }
+        val total: Int,
+    )
 }

@@ -21,6 +21,8 @@ data class CheapestCombinationResponse(
     val socks: ProductSummary,
     @SerialName("액세서리")
     val accessory: ProductSummary,
+    @SerialName("총액")
+    val total: Int,
 ) {
     @Serializable
     data class ProductSummary(

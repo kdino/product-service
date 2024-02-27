@@ -37,4 +37,5 @@ fun CheapestCombinationResult.toResponse() =
             brandName = accessory.brandName,
             price = accessory.price,
         ),
+        total = total,
     )
