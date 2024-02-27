@@ -13,6 +13,7 @@ object Products : Table() {
     val cap = integer("cap")
     val socks = integer("socks")
     val accessory = integer("accessory")
+    val total = integer("total")
     val created = long("created")
     val modified = long("modified").nullable()
     val deleted = long("deleted").nullable()

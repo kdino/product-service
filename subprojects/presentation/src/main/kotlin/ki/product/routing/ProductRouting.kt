@@ -14,16 +14,37 @@ import ki.product.service.ProductService
 
 object ProductRouting {
     fun Route.productRouting(productService: ProductService) {
-        get("/products/cheapest-combination") {
+        get("/products/cheapest/combination") {
             productService.getCheapestCombination().mapError {
                 when (it) {
                     is ProductService.Failure.DataNotFound ->
                         DataNotFoundResponse()
+
                     is ProductService.Failure.InternalServerError ->
                         InternalErrorResponse(it.message)
                 }
             }.fold(
                 recover = {
+                    call.respondError(it)
+                },
+                transform = {
+                    call.respond(it.toResponse())
+                },
+            )
+        }
+
+        get("/products/cheapest/brand") {
+            productService.getCheapestBrand().mapError {
+                when (it) {
+                    is ProductService.Failure.DataNotFound ->
+                        DataNotFoundResponse()
+
+                    is ProductService.Failure.InternalServerError ->
+                        InternalErrorResponse(it.message)
+                }
+            }.fold(
+                recover = {
+                    println(it.detail)
                     call.respondError(it)
                 },
                 transform = {

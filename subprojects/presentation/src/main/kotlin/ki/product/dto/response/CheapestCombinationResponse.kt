@@ -6,26 +6,26 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CheapestCombinationResponse(
     @SerialName("상의")
-    val top: ProductSummary,
+    val top: CategoryItem,
     @SerialName("아우터")
-    val outer: ProductSummary,
+    val outer: CategoryItem,
     @SerialName("바지")
-    val pants: ProductSummary,
+    val pants: CategoryItem,
     @SerialName("스니커즈")
-    val sneakers: ProductSummary,
+    val sneakers: CategoryItem,
     @SerialName("가방")
-    val bag: ProductSummary,
+    val bag: CategoryItem,
     @SerialName("모자")
-    val cap: ProductSummary,
+    val cap: CategoryItem,
     @SerialName("양말")
-    val socks: ProductSummary,
+    val socks: CategoryItem,
     @SerialName("액세서리")
-    val accessory: ProductSummary,
+    val accessory: CategoryItem,
     @SerialName("총액")
     val total: Int,
 ) {
     @Serializable
-    data class ProductSummary(
+    data class CategoryItem(
         val brandName: String,
         val price: Int,
     )

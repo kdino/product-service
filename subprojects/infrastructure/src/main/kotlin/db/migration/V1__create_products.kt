@@ -24,6 +24,7 @@ class V1__create_products : BaseJavaMigration() {
                 it[cap] = 1700
                 it[socks] = 1800
                 it[accessory] = 2300
+                it[total] = 37700
                 it[created] = System.currentTimeMillis()
             }
             Products.insert {
@@ -37,6 +38,7 @@ class V1__create_products : BaseJavaMigration() {
                 it[cap] = 2000
                 it[socks] = 2000
                 it[accessory] = 2200
+                it[total] = 37600
                 it[created] = System.currentTimeMillis()
             }
             Products.insert {
@@ -50,6 +52,7 @@ class V1__create_products : BaseJavaMigration() {
                 it[cap] = 1900
                 it[socks] = 2200
                 it[accessory] = 2100
+                it[total] = 37100
                 it[created] = System.currentTimeMillis()
             }
             Products.insert {
@@ -63,6 +66,7 @@ class V1__create_products : BaseJavaMigration() {
                 it[cap] = 1500
                 it[socks] = 2400
                 it[accessory] = 2000
+                it[total] = 36100
                 it[created] = System.currentTimeMillis()
             }
             Products.insert {
@@ -76,6 +80,7 @@ class V1__create_products : BaseJavaMigration() {
                 it[cap] = 1800
                 it[socks] = 2100
                 it[accessory] = 2100
+                it[total] = 37700
                 it[created] = System.currentTimeMillis()
             }
             Products.insert {
@@ -89,6 +94,7 @@ class V1__create_products : BaseJavaMigration() {
                 it[cap] = 1600
                 it[socks] = 2300
                 it[accessory] = 1900
+                it[total] = 39600
                 it[created] = System.currentTimeMillis()
             }
             Products.insert {
@@ -102,6 +108,7 @@ class V1__create_products : BaseJavaMigration() {
                 it[cap] = 1700
                 it[socks] = 2100
                 it[accessory] = 2000
+                it[total] = 37200
                 it[created] = System.currentTimeMillis()
             }
             Products.insert {
@@ -115,6 +122,7 @@ class V1__create_products : BaseJavaMigration() {
                 it[cap] = 1600
                 it[socks] = 2000
                 it[accessory] = 2000
+                it[total] = 37600
                 it[created] = System.currentTimeMillis()
             }
             Products.insert {
@@ -128,6 +136,7 @@ class V1__create_products : BaseJavaMigration() {
                 it[cap] = 1700
                 it[socks] = 1700
                 it[accessory] = 2400
+                it[total] = 38900
                 it[created] = System.currentTimeMillis()
             }
         }

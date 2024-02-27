@@ -1,11 +1,12 @@
 package ki.product.repository
 
 import arrow.core.raise.Effect
+import ki.product.model.CategoryItem
 import ki.product.model.Product
-import ki.product.model.ProductSummary
 
 interface ProductRepository {
-    fun getCheapestBrandByCategory(category: Product.Category): Effect<Failure, ProductSummary>
+    fun getCheapestItemByCategory(category: Product.Category): Effect<Failure, CategoryItem>
+    fun getCheapestBrand(): Effect<Failure, Product>
 
     sealed class Failure(
         override val message: String?,

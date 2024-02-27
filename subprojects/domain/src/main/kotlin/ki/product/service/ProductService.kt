@@ -1,10 +1,12 @@
 package ki.product.service
 
 import arrow.core.raise.Effect
-import ki.product.model.ProductSummary
+import ki.product.model.BrandItem
+import ki.product.model.CategoryItem
 
 interface ProductService {
     fun getCheapestCombination(): Effect<Failure, CheapestCombinationResult>
+    fun getCheapestBrand(): Effect<Failure, CheapestBrandResult>
 
     sealed class Failure(
         override val message: String?,
@@ -18,14 +20,20 @@ interface ProductService {
     }
 
     data class CheapestCombinationResult(
-        val top: ProductSummary,
-        val outer: ProductSummary,
-        val pants: ProductSummary,
-        val sneakers: ProductSummary,
-        val bag: ProductSummary,
-        val cap: ProductSummary,
-        val socks: ProductSummary,
-        val accessory: ProductSummary,
+        val top: CategoryItem,
+        val outer: CategoryItem,
+        val pants: CategoryItem,
+        val sneakers: CategoryItem,
+        val bag: CategoryItem,
+        val cap: CategoryItem,
+        val socks: CategoryItem,
+        val accessory: CategoryItem,
         val total: Int,
+    )
+
+    data class CheapestBrandResult(
+        val brandName: String,
+        val brandItems: List<BrandItem>,
+        val total: Int
     )
 }
