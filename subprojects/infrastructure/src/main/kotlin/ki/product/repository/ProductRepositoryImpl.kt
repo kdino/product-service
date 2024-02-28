@@ -8,11 +8,12 @@ import ki.product.model.CategoryItem
 import ki.product.model.Product
 import ki.product.repository.ProductRepository.Failure
 import ki.product.repository.ProductRepository.ReadFailure
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
@@ -24,6 +25,7 @@ class ProductRepositoryImpl(
         try {
             val result = databaseFactory.dbExec {
                 Products.selectAll()
+                    .where(Products.deleted eq null)
                     .orderBy(category.toEntityColumn(), SortOrder.ASC).limit(1)
                     .first()
             }
@@ -44,6 +46,7 @@ class ProductRepositoryImpl(
             try {
                 val result = databaseFactory.dbExec {
                     Products.selectAll()
+                        .where(Products.deleted eq null)
                         .orderBy(category.toEntityColumn(), SortOrder.DESC).limit(1)
                         .first()
                 }
@@ -63,6 +66,7 @@ class ProductRepositoryImpl(
         try {
             val result = databaseFactory.dbExec {
                 Products.selectAll()
+                    .where(Products.deleted eq null)
                     .orderBy(Products.total, SortOrder.ASC).limit(1)
                     .first()
             }
@@ -79,7 +83,7 @@ class ProductRepositoryImpl(
         try {
             val result = databaseFactory.dbExec {
                 Products.selectAll()
-                    .where(Products.brandName eq brandName)
+                    .where((Products.brandName eq brandName) and (Products.deleted eq null))
                     .first()
             }
 
@@ -120,7 +124,7 @@ class ProductRepositoryImpl(
         try {
             val result = databaseFactory.dbExec {
                 Products.selectAll()
-                    .where(Products.brandName eq brandName)
+                    .where((Products.brandName eq brandName) and (Products.deleted eq null))
                     .first()
             }
 
@@ -135,7 +139,7 @@ class ProductRepositoryImpl(
     override fun updateProduct(product: Product): Effect<Failure, Product> = effect {
         try {
             databaseFactory.dbExec {
-                Products.update({ Products.id eq product.id }) {
+                Products.update({ (Products.id eq product.id) and (Products.deleted eq null) }) {
                     it[brandName] = product.brandName
                     it[top] = product.top
                     it[outer] = product.outer
@@ -156,17 +160,15 @@ class ProductRepositoryImpl(
         }
     }
 
-    override fun deleteProduct(brandName: String): Effect<ReadFailure, Unit> = effect {
+    override fun deleteProduct(brandName: String): Effect<Failure, Unit> = effect {
         try {
             databaseFactory.dbExec {
-                Products.deleteWhere {
-                    Products.brandName eq brandName
+                Products.update({ (Products.brandName eq brandName) and (Products.deleted eq null) }) {
+                    it[deleted] = Clock.System.now().toEpochMilliseconds()
                 }
             }
-        } catch (e: NoSuchElementException) {
-            raise(ReadFailure.NoData())
         } catch (e: Exception) {
-            raise(ReadFailure.DbError(e.message, e))
+            raise(Failure.DbError(e.message, e))
         }
     }
 

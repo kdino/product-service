@@ -155,9 +155,9 @@ object ProductRouting {
 
             productService.deleteProduct(brandName).mapError {
                 when (it) {
-                    is ProductService.Failure.DataNotFound ->
+                    is ProductService.DeleteProductFailure.BrandNotFound ->
                         DataNotFoundResponse("Requested brand name not found - ${it.message}")
-                    is ProductService.Failure.InternalServerError ->
+                    is ProductService.DeleteProductFailure.InternalServerError ->
                         InternalErrorResponse(it.message)
                 }
             }.fold(

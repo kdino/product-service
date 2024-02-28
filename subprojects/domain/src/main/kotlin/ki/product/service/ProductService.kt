@@ -15,7 +15,7 @@ interface ProductService {
         brandName: String,
         updateProductCommand: Product.UpdateCommand,
     ): Effect<UpdateProductFailure, Product>
-    fun deleteProduct(brandName: String): Effect<Failure, Unit>
+    fun deleteProduct(brandName: String): Effect<DeleteProductFailure, Unit>
 
     sealed class Failure(
         override val message: String?,
@@ -62,6 +62,17 @@ interface ProductService {
         data class InternalServerError(
             override val message: String?,
         ) : UpdateProductFailure(message)
+    }
+
+    sealed class DeleteProductFailure(
+        override val message: String?,
+    ) : Throwable(message) {
+        data class BrandNotFound(
+            override val message: String?,
+        ) : DeleteProductFailure(message)
+        data class InternalServerError(
+            override val message: String?,
+        ) : DeleteProductFailure(message)
     }
 
     data class CheapestCombinationResult(

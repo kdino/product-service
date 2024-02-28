@@ -11,6 +11,7 @@ import ki.product.service.ProductService.CategorySummaryResult
 import ki.product.service.ProductService.CheapestBrandResult
 import ki.product.service.ProductService.CheapestCombinationResult
 import ki.product.service.ProductService.CreateProductFailure
+import ki.product.service.ProductService.DeleteProductFailure
 import ki.product.service.ProductService.Failure
 import ki.product.service.ProductService.GetCategorySummaryFailure
 import ki.product.service.ProductService.UpdateProductFailure
@@ -235,13 +236,18 @@ class ProductServiceImpl(
         }.bind()
     }
 
-    override fun deleteProduct(brandName: String): Effect<Failure, Unit> = effect {
+    override fun deleteProduct(brandName: String): Effect<DeleteProductFailure, Unit> = effect {
+        productRepository.getProductByBrandName(brandName).mapError {
+            when (it) {
+                is ProductRepository.Failure.DbError ->
+                    raise(DeleteProductFailure.InternalServerError(it.message))
+            }
+        }.bind() ?: raise(DeleteProductFailure.BrandNotFound(brandName))
+
         productRepository.deleteProduct(brandName).mapError {
             when (it) {
-                is ProductRepository.ReadFailure.DbError ->
-                    Failure.InternalServerError(it.message)
-                is ProductRepository.ReadFailure.NoData ->
-                    Failure.DataNotFound(brandName)
+                is ProductRepository.Failure.DbError ->
+                    DeleteProductFailure.InternalServerError(it.message)
             }
         }.bind()
     }

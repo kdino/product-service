@@ -12,7 +12,7 @@ interface ProductRepository {
     fun createProduct(product: Product): Effect<Failure, Product>
     fun getProduct(brandName: String): Effect<ReadFailure, Product>
     fun updateProduct(product: Product): Effect<Failure, Product>
-    fun deleteProduct(brandName: String): Effect<ReadFailure, Unit>
+    fun deleteProduct(brandName: String): Effect<Failure, Unit>
 
     sealed class ReadFailure(
         override val message: String?,
