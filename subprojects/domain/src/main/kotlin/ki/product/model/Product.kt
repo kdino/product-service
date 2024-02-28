@@ -54,7 +54,7 @@ data class Product(
             accessory = command.accessory ?: accessory,
             total = (command.top ?: 0) + (command.outer ?: 0) + (command.pants ?: 0) + (command.sneakers ?: 0) +
                 (command.bag ?: 0) + (command.cap ?: 0) + (command.socks ?: 0) + (command.accessory ?: 0),
-            modified = Clock.System.now()
+            modified = Clock.System.now(),
         )
 
     data class CreateCommand(

@@ -11,6 +11,7 @@ interface ProductRepository {
     fun getProductByBrandName(brandName: String): Effect<Failure, Product?>
     fun createProduct(product: Product): Effect<Failure, Product>
     fun updateProduct(product: Product): Effect<Failure, Product>
+    fun deleteProduct(brandName: String): Effect<ReadFailure, Unit>
 
     sealed class ReadFailure(
         override val message: String?,

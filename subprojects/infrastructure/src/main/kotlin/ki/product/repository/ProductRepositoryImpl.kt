@@ -12,6 +12,7 @@ import kotlinx.datetime.Instant
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
@@ -136,6 +137,20 @@ class ProductRepositoryImpl(
             product
         } catch (e: Exception) {
             raise(Failure.DbError(e.message, e))
+        }
+    }
+
+    override fun deleteProduct(brandName: String): Effect<ReadFailure, Unit> = effect {
+        try {
+            databaseFactory.dbExec {
+                Products.deleteWhere {
+                    Products.brandName eq brandName
+                }
+            }
+        } catch (e: NoSuchElementException) {
+            raise(ReadFailure.NoData())
+        } catch (e: Exception) {
+            raise(ReadFailure.DbError(e.message, e))
         }
     }
 

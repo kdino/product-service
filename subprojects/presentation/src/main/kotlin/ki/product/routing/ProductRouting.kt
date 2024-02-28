@@ -6,6 +6,7 @@ import io.ktor.application.call
 import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.Route
+import io.ktor.routing.delete
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.put
@@ -125,6 +126,26 @@ object ProductRouting {
                 },
                 transform = {
                     call.respond(it.toResponse())
+                },
+            )
+        }
+
+        delete("/products/brand/{brand}") {
+            val brandName = call.parameters["brand"]!!
+
+            productService.deleteProduct(brandName).mapError {
+                when (it) {
+                    is ProductService.Failure.DataNotFound ->
+                        DataNotFoundResponse("Requested brand name not found - ${it.message}")
+                    is ProductService.Failure.InternalServerError ->
+                        InternalErrorResponse(it.message)
+                }
+            }.fold(
+                recover = {
+                    call.respondError(it)
+                },
+                transform = {
+                    call.respond(Unit)
                 },
             )
         }

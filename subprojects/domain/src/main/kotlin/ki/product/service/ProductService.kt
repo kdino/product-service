@@ -14,6 +14,7 @@ interface ProductService {
         brandName: String,
         updateProductCommand: Product.UpdateCommand,
     ): Effect<UpdateProductFailure, Product>
+    fun deleteProduct(brandName: String): Effect<Failure, Unit>
 
     sealed class Failure(
         override val message: String?,
