@@ -10,6 +10,7 @@ interface ProductService {
     fun getCheapestBrand(): Effect<Failure, CheapestBrandResult>
     fun getCategorySummary(category: Product.Category): Effect<GetCategorySummaryFailure, CategorySummaryResult>
     fun createProduct(product: Product): Effect<CreateProductFailure, Product>
+    fun getProduct(brandName: String): Effect<Failure, Product>
     fun updateProduct(
         brandName: String,
         updateProductCommand: Product.UpdateCommand,

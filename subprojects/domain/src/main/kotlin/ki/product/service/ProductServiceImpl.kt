@@ -188,6 +188,17 @@ class ProductServiceImpl(
         }.bind()
     }
 
+    override fun getProduct(brandName: String): Effect<Failure, Product> = effect {
+        productRepository.getProduct(brandName).mapError {
+            when (it) {
+                is ProductRepository.ReadFailure.DbError ->
+                    Failure.InternalServerError(it.message)
+                is ProductRepository.ReadFailure.NoData ->
+                    Failure.DataNotFound(brandName)
+            }
+        }.bind()
+    }
+
     override fun updateProduct(
         brandName: String,
         updateProductCommand: Product.UpdateCommand,

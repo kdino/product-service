@@ -107,6 +107,26 @@ object ProductRouting {
             )
         }
 
+        get("/products/brand/{brand}") {
+            val brandName = call.parameters["brand"]!!
+
+            productService.getProduct(brandName).mapError {
+                when (it) {
+                    is ProductService.Failure.DataNotFound ->
+                        DataNotFoundResponse("Requested brand name not found - ${it.message}")
+                    is ProductService.Failure.InternalServerError ->
+                        InternalErrorResponse(it.message)
+                }
+            }.fold(
+                recover = {
+                    call.respondError(it)
+                },
+                transform = {
+                    call.respond(it.toResponse())
+                },
+            )
+        }
+
         put("/products/brand/{brand}") {
             val brandName = call.parameters["brand"]!!
             val updateProductRequest = call.receive<UpdateProductRequest>()

@@ -116,6 +116,22 @@ class ProductRepositoryImpl(
         }
     }
 
+    override fun getProduct(brandName: String): Effect<ReadFailure, Product> = effect {
+        try {
+            val result = databaseFactory.dbExec {
+                Products.selectAll()
+                    .where(Products.brandName eq brandName)
+                    .first()
+            }
+
+            toDomainProduct(result)
+        } catch (e: NoSuchElementException) {
+            raise(ReadFailure.NoData())
+        } catch (e: Exception) {
+            raise(ReadFailure.DbError(e.message, e))
+        }
+    }
+
     override fun updateProduct(product: Product): Effect<Failure, Product> = effect {
         try {
             databaseFactory.dbExec {
