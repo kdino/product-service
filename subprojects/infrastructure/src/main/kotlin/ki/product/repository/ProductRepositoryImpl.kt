@@ -150,7 +150,7 @@ class ProductRepositoryImpl(
                     it[socks] = product.socks
                     it[accessory] = product.accessory
                     it[total] = product.total
-                    it[modified] = product.modified?.toEpochMilliseconds()
+                    it[modified] = Clock.System.now().toEpochMilliseconds()
                 }
             }
 
