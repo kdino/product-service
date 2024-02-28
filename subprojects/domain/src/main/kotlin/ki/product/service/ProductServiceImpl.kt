@@ -10,8 +10,10 @@ import ki.product.repository.ProductRepository
 import ki.product.service.ProductService.CategorySummaryResult
 import ki.product.service.ProductService.CheapestBrandResult
 import ki.product.service.ProductService.CheapestCombinationResult
+import ki.product.service.ProductService.CreateProductFailure
 import ki.product.service.ProductService.Failure
 import ki.product.service.ProductService.GetCategorySummaryFailure
+import ki.product.service.ProductService.UpdateProductFailure
 
 class ProductServiceImpl(
     private val productRepository: ProductRepository,
@@ -168,20 +170,56 @@ class ProductServiceImpl(
         )
     }
 
-    override fun createProduct(product: Product): Effect<ProductService.CreateProductFailure, Product> = effect {
+    override fun createProduct(product: Product): Effect<CreateProductFailure, Product> = effect {
         productRepository.getProductByBrandName(product.brandName).mapError {
             when (it) {
                 is ProductRepository.Failure.DbError ->
-                    raise(ProductService.CreateProductFailure.InternalServerError(it.message))
+                    raise(CreateProductFailure.InternalServerError(it.message))
             }
         }.bind()?.let {
-            raise(ProductService.CreateProductFailure.BrandNameAlreadyExists(it.brandName))
+            raise(CreateProductFailure.BrandNameAlreadyExists(it.brandName))
         }
 
         productRepository.createProduct(product).mapError {
             when (it) {
                 is ProductRepository.Failure.DbError ->
-                    raise(ProductService.CreateProductFailure.InternalServerError(it.message))
+                    raise(CreateProductFailure.InternalServerError(it.message))
+            }
+        }.bind()
+    }
+
+    override fun updateProduct(
+        brandName: String,
+        updateProductCommand: Product.UpdateCommand,
+    ): Effect<UpdateProductFailure, Product> = effect {
+        val oldProduct = productRepository.getProductByBrandName(brandName).mapError {
+            when (it) {
+                is ProductRepository.Failure.DbError ->
+                    raise(UpdateProductFailure.InternalServerError(it.message))
+            }
+        }.bind() ?: raise(UpdateProductFailure.BrandNotFound(brandName))
+
+        // Update를 수행할 브랜드 대상과 바꾸고 싶은 브랜드 이름이 같다면 업데이트 허용
+        if (brandName != updateProductCommand.brandName && updateProductCommand.brandName != null) {
+            val productWithNewBrandName =
+                productRepository.getProductByBrandName(updateProductCommand.brandName).mapError {
+                    when (it) {
+                        is ProductRepository.Failure.DbError ->
+                            raise(UpdateProductFailure.InternalServerError(it.message))
+                    }
+                }.bind()
+
+            if (productWithNewBrandName != null) {
+                raise(UpdateProductFailure.BrandNameAlreadyExists(updateProductCommand.brandName))
+            }
+        }
+
+        val product = oldProduct.update(updateProductCommand)
+
+        productRepository.updateProduct(product).mapError {
+            when (it) {
+                is ProductRepository.Failure.DbError ->
+                    UpdateProductFailure.InternalServerError(it.message)
             }
         }.bind()
     }

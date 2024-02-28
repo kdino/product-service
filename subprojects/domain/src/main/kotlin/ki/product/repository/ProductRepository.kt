@@ -10,6 +10,7 @@ interface ProductRepository {
     fun getCheapestBrand(): Effect<ReadFailure, Product>
     fun getProductByBrandName(brandName: String): Effect<Failure, Product?>
     fun createProduct(product: Product): Effect<Failure, Product>
+    fun updateProduct(product: Product): Effect<Failure, Product>
 
     sealed class ReadFailure(
         override val message: String?,

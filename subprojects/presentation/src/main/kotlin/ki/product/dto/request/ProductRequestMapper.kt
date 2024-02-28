@@ -17,6 +17,19 @@ fun CreateProductRequest.toDomain() =
         ),
     )
 
+fun UpdateProductRequest.toUpdateCommand() =
+    Product.UpdateCommand(
+        brandName = brandName,
+        top = top,
+        outer = outer,
+        pants = pants,
+        sneakers = sneakers,
+        bag = bag,
+        cap = cap,
+        socks = socks,
+        accessory = accessory,
+    )
+
 fun String?.toCategory() =
     when (this) {
         "top" -> Product.Category.TOP

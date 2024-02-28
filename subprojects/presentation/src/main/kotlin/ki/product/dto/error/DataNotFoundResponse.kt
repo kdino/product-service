@@ -8,5 +8,5 @@ import kotlinx.serialization.Transient
 class DataNotFoundResponse(
     override val detail: String? = "Data not found error",
     @Transient
-    override val statusCode: HttpStatusCode = HttpStatusCode.NoContent,
+    override val statusCode: HttpStatusCode = HttpStatusCode.NotFound,
 ) : BaseErrorResponse()

@@ -43,6 +43,7 @@ data class Product(
 
     fun update(command: UpdateCommand) =
         copy(
+            brandName = command.brandName ?: brandName,
             top = command.top ?: top,
             outer = command.outer ?: outer,
             pants = command.pants ?: pants,
@@ -53,6 +54,7 @@ data class Product(
             accessory = command.accessory ?: accessory,
             total = (command.top ?: 0) + (command.outer ?: 0) + (command.pants ?: 0) + (command.sneakers ?: 0) +
                 (command.bag ?: 0) + (command.cap ?: 0) + (command.socks ?: 0) + (command.accessory ?: 0),
+            modified = Clock.System.now()
         )
 
     data class CreateCommand(
@@ -68,6 +70,7 @@ data class Product(
     )
 
     data class UpdateCommand(
+        val brandName: String?,
         val top: Int?,
         val outer: Int?,
         val pants: Int?,

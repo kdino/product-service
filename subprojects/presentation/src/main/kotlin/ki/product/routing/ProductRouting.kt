@@ -8,13 +8,16 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.post
+import io.ktor.routing.put
 import ki.product.dto.error.BadRequestErrorResponse
 import ki.product.dto.error.DataAlreadyExistsErrorResponse
 import ki.product.dto.error.DataNotFoundResponse
 import ki.product.dto.error.InternalErrorResponse
 import ki.product.dto.request.CreateProductRequest
+import ki.product.dto.request.UpdateProductRequest
 import ki.product.dto.request.toCategory
 import ki.product.dto.request.toDomain
+import ki.product.dto.request.toUpdateCommand
 import ki.product.dto.response.toResponse
 import ki.product.respondError
 import ki.product.service.ProductService
@@ -62,7 +65,7 @@ object ProductRouting {
 
         get("/products/category/{category}") {
             val category = call.parameters["category"].toCategory()
-                ?: return@get call.respondError(BadRequestErrorResponse("올바른 카테고리가 아닙니다."))
+                ?: return@get call.respondError(BadRequestErrorResponse("Not appropriate category"))
 
             productService.getCategorySummary(category).mapError {
                 when (it) {
@@ -88,9 +91,32 @@ object ProductRouting {
             productService.createProduct(createProductRequest.toDomain()).mapError {
                 when (it) {
                     is ProductService.CreateProductFailure.BrandNameAlreadyExists ->
-                        DataAlreadyExistsErrorResponse("Brand name already exists - ${it.message}")
+                        DataAlreadyExistsErrorResponse("Requested brand name already exists - ${it.message}")
 
                     is ProductService.CreateProductFailure.InternalServerError ->
+                        InternalErrorResponse(it.message)
+                }
+            }.fold(
+                recover = {
+                    call.respondError(it)
+                },
+                transform = {
+                    call.respond(it.toResponse())
+                },
+            )
+        }
+
+        put("/products/brand/{brand}") {
+            val brandName = call.parameters["brand"]!!
+            val updateProductRequest = call.receive<UpdateProductRequest>()
+
+            productService.updateProduct(brandName, updateProductRequest.toUpdateCommand()).mapError {
+                when (it) {
+                    is ProductService.UpdateProductFailure.BrandNameAlreadyExists ->
+                        DataAlreadyExistsErrorResponse("Requested brand name already exists - ${it.message}")
+                    is ProductService.UpdateProductFailure.BrandNotFound ->
+                        DataNotFoundResponse("Requested brand name not found - ${it.message}")
+                    is ProductService.UpdateProductFailure.InternalServerError ->
                         InternalErrorResponse(it.message)
                 }
             }.fold(

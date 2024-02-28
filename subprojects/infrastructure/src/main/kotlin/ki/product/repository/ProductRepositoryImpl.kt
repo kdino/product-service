@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
 
 class ProductRepositoryImpl(
     private val databaseFactory: DatabaseFactory,
@@ -105,6 +106,30 @@ class ProductRepositoryImpl(
                     products[accessory] = product.accessory
                     products[total] = product.total
                     products[created] = product.created.toEpochMilliseconds()
+                }
+            }
+
+            product
+        } catch (e: Exception) {
+            raise(Failure.DbError(e.message, e))
+        }
+    }
+
+    override fun updateProduct(product: Product): Effect<Failure, Product> = effect {
+        try {
+            databaseFactory.dbExec {
+                Products.update({ Products.id eq product.id }) {
+                    it[brandName] = product.brandName
+                    it[top] = product.top
+                    it[outer] = product.outer
+                    it[pants] = product.pants
+                    it[sneakers] = product.sneakers
+                    it[bag] = product.bag
+                    it[cap] = product.cap
+                    it[socks] = product.socks
+                    it[accessory] = product.accessory
+                    it[total] = product.total
+                    it[modified] = product.modified?.toEpochMilliseconds()
                 }
             }
 
