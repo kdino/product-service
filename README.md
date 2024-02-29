@@ -13,6 +13,8 @@
 | GET | /products/cheapest/brand | 모든 카테고리의 가격 합이 가장 저렴한 브랜드의 제품 정보를 조회합니다.|
 | GET | /products/category/{category} | 특정 카테고리의 최대/최저 가격 제품 정보를 조회합니다.|
 
+[<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://god.gw.postman.com/run-collection/23973713-a9cb642a-85c1-4cb7-ac77-6b29de5f118d?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D23973713-a9cb642a-85c1-4cb7-ac77-6b29de5f118d%26entityType%3Dcollection%26workspaceId%3D372cb8e5-7552-4f4e-ad00-135f88fc28f3)
+
 ### Tech Stack
 
 * kotlin
