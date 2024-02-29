@@ -37,52 +37,36 @@ class ProductServiceImpl(
 
         CheapestCombinationResult(
             top = CategoryItem(
-                brandName = cheapestPriceMap[Product.Category.TOP]?.brandName
-                    ?: raise(Failure.InternalServerError("No data")),
-                price = cheapestPriceMap[Product.Category.TOP]?.price
-                    ?: raise(Failure.InternalServerError("No data")),
+                brandName = cheapestPriceMap[Product.Category.TOP]!!.brandName,
+                price = cheapestPriceMap[Product.Category.TOP]!!.price,
             ),
             outer = CategoryItem(
-                brandName = cheapestPriceMap[Product.Category.OUTER]?.brandName
-                    ?: raise(Failure.InternalServerError("No data")),
-                price = cheapestPriceMap[Product.Category.OUTER]?.price
-                    ?: raise(Failure.InternalServerError("No data")),
+                brandName = cheapestPriceMap[Product.Category.OUTER]!!.brandName,
+                price = cheapestPriceMap[Product.Category.OUTER]!!.price,
             ),
             pants = CategoryItem(
-                brandName = cheapestPriceMap[Product.Category.PANTS]?.brandName
-                    ?: raise(Failure.InternalServerError("No data")),
-                price = cheapestPriceMap[Product.Category.PANTS]?.price
-                    ?: raise(Failure.InternalServerError("No data")),
+                brandName = cheapestPriceMap[Product.Category.PANTS]!!.brandName,
+                price = cheapestPriceMap[Product.Category.PANTS]!!.price,
             ),
             sneakers = CategoryItem(
-                brandName = cheapestPriceMap[Product.Category.SNEAKERS]?.brandName
-                    ?: raise(Failure.InternalServerError("No data")),
-                price = cheapestPriceMap[Product.Category.SNEAKERS]?.price
-                    ?: raise(Failure.InternalServerError("No data")),
+                brandName = cheapestPriceMap[Product.Category.SNEAKERS]!!.brandName,
+                price = cheapestPriceMap[Product.Category.SNEAKERS]!!.price,
             ),
             bag = CategoryItem(
-                brandName = cheapestPriceMap[Product.Category.BAG]?.brandName
-                    ?: raise(Failure.InternalServerError("No data")),
-                price = cheapestPriceMap[Product.Category.BAG]?.price
-                    ?: raise(Failure.InternalServerError("No data")),
+                brandName = cheapestPriceMap[Product.Category.BAG]!!.brandName,
+                price = cheapestPriceMap[Product.Category.BAG]!!.price,
             ),
             cap = CategoryItem(
-                brandName = cheapestPriceMap[Product.Category.CAP]?.brandName
-                    ?: raise(Failure.InternalServerError("No data")),
-                price = cheapestPriceMap[Product.Category.CAP]?.price
-                    ?: raise(Failure.InternalServerError("No data")),
+                brandName = cheapestPriceMap[Product.Category.CAP]!!.brandName,
+                price = cheapestPriceMap[Product.Category.CAP]!!.price,
             ),
             socks = CategoryItem(
-                brandName = cheapestPriceMap[Product.Category.SOCKS]?.brandName
-                    ?: raise(Failure.InternalServerError("No data")),
-                price = cheapestPriceMap[Product.Category.SOCKS]?.price
-                    ?: raise(Failure.InternalServerError("No data")),
+                brandName = cheapestPriceMap[Product.Category.SOCKS]!!.brandName,
+                price = cheapestPriceMap[Product.Category.SOCKS]!!.price,
             ),
             accessory = CategoryItem(
-                brandName = cheapestPriceMap[Product.Category.ACCESSORY]?.brandName
-                    ?: raise(Failure.InternalServerError("No data")),
-                price = cheapestPriceMap[Product.Category.ACCESSORY]?.price
-                    ?: raise(Failure.InternalServerError("No data")),
+                brandName = cheapestPriceMap[Product.Category.ACCESSORY]!!.brandName,
+                price = cheapestPriceMap[Product.Category.ACCESSORY]!!.price,
             ),
             total = totalPrice,
         )

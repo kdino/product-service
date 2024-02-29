@@ -154,7 +154,13 @@ class ProductRepositoryImpl(
                 }
             }
 
-            product
+            val updatedProduct = databaseFactory.dbExec {
+                Products.selectAll()
+                    .where((Products.id eq product.id) and (Products.deleted eq null))
+                    .first()
+            }
+
+            toDomainProduct(updatedProduct)
         } catch (e: Exception) {
             raise(Failure.DbError(e.message, e))
         }
