@@ -1,33 +1,21 @@
 package ki.product.dto.request
 
 import ki.product.model.Product
+import ki.product.model.Product.Category
+import ki.product.dto.Category as CategoryDto
 
-fun CreateProductRequest.toDomain() =
-    Product.create(
-        Product.CreateCommand(
-            brandName = brandName,
-            top = top,
-            outer = outer,
-            pants = pants,
-            sneakers = sneakers,
-            bag = bag,
-            cap = cap,
-            socks = socks,
-            accessory = accessory,
-        ),
+fun CreateProductRequest.toCommand() =
+    Product.CreateCommand(
+        price = price,
+        brandId = brandId,
+        category = category.toDomain(),
     )
 
-fun UpdateProductRequest.toUpdateCommand() =
+fun UpdateProductRequest.toCommand() =
     Product.UpdateCommand(
-        brandName = brandName,
-        top = top,
-        outer = outer,
-        pants = pants,
-        sneakers = sneakers,
-        bag = bag,
-        cap = cap,
-        socks = socks,
-        accessory = accessory,
+        price = price,
+        brandId = brandId,
+        category = category?.toDomain(),
     )
 
 fun String?.toCategory() =
@@ -41,4 +29,16 @@ fun String?.toCategory() =
         "socks" -> Product.Category.SOCKS
         "accessory" -> Product.Category.ACCESSORY
         else -> null
+    }
+
+fun CategoryDto.toDomain() =
+    when (this) {
+        CategoryDto.TOP -> Category.TOP
+        CategoryDto.OUTER -> Category.OUTER
+        CategoryDto.PANTS -> Category.PANTS
+        CategoryDto.SNEAKERS -> Category.SNEAKERS
+        CategoryDto.BAG -> Category.BAG
+        CategoryDto.CAP -> Category.CAP
+        CategoryDto.SOCKS -> Category.SOCKS
+        CategoryDto.ACCESSORY -> Category.ACCESSORY
     }

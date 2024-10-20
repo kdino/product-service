@@ -3,8 +3,12 @@ package ki.product
 import com.typesafe.config.ConfigFactory
 import ki.product.config.DatabaseConfiguration
 import ki.product.config.DatabaseFactory
+import ki.product.repository.BrandRepository
+import ki.product.repository.BrandRepositoryImpl
 import ki.product.repository.ProductRepository
 import ki.product.repository.ProductRepositoryImpl
+import ki.product.service.BrandService
+import ki.product.service.BrandServiceImpl
 import ki.product.service.ProductService
 import ki.product.service.ProductServiceImpl
 import kotlinx.coroutines.CoroutineScope
@@ -46,7 +50,7 @@ data class Presentation(
 ) {
     companion object {
         fun load(httpConfiguration: HttpConfiguration, domain: Domain): Presentation {
-            val httpServer = HttpServer(httpConfiguration, domain.productService)
+            val httpServer = HttpServer(httpConfiguration, domain.productService, domain.brandService)
 
             return Presentation(httpServer)
         }
@@ -55,15 +59,21 @@ data class Presentation(
 
 data class Domain(
     val productService: ProductService,
+    val brandService: BrandService,
 ) {
     companion object {
         fun load(
             infrastructure: Infrastructure,
         ): Domain {
-            val productService = ProductServiceImpl(infrastructure.productRepository)
+            val productService = ProductServiceImpl(infrastructure.productRepository, infrastructure.brandRepository)
+            val brandService = BrandServiceImpl(
+                infrastructure.brandRepository,
+                infrastructure.productRepository,
+            )
 
             return Domain(
                 productService,
+                brandService,
             )
         }
     }
@@ -71,6 +81,7 @@ data class Domain(
 
 data class Infrastructure(
     val productRepository: ProductRepository,
+    val brandRepository: BrandRepository,
 ) {
     companion object {
         fun load(
@@ -78,11 +89,13 @@ data class Infrastructure(
         ): Infrastructure {
             val databaseFactory = DatabaseFactory(databaseConfiguration)
             val productRepository = ProductRepositoryImpl(databaseFactory)
+            val brandRepository = BrandRepositoryImpl(databaseFactory)
 
             databaseFactory.connectAndMigrate()
 
             return Infrastructure(
                 productRepository,
+                brandRepository,
             )
         }
     }

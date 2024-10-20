@@ -1,95 +1,44 @@
 package ki.product.service
 
 import arrow.core.raise.Effect
-import ki.product.model.BrandItem
 import ki.product.model.CategoryItem
 import ki.product.model.Product
 
 interface ProductService {
-    fun getCheapestCombination(): Effect<Failure, CheapestCombinationResult>
-    fun getCheapestBrand(): Effect<Failure, CheapestBrandResult>
-    fun getCategorySummary(category: Product.Category): Effect<GetCategorySummaryFailure, CategorySummaryResult>
-    fun createProduct(product: Product): Effect<CreateProductFailure, Product>
-    fun getProduct(brandName: String): Effect<Failure, Product>
+    fun getCheapestCombination(): Effect<GetSummaryFailure, CheapestCombinationResult>
+    fun getCheapestBrand(): Effect<GetCheapestBrandFailure, CheapestBrandResult>
+    fun getCategorySummary(category: Product.Category): Effect<GetSummaryFailure, CategorySummaryResult>
+    fun createProduct(command: Product.CreateCommand): Effect<CreateProductFailure, Product>
     fun updateProduct(
-        brandName: String,
-        updateProductCommand: Product.UpdateCommand,
+        id: String,
+        command: Product.UpdateCommand,
     ): Effect<UpdateProductFailure, Product>
-    fun deleteProduct(brandName: String): Effect<DeleteProductFailure, Unit>
 
-    sealed class Failure(
-        override val message: String?,
-    ) : Throwable(message) {
-        data class DataNotFound(
-            override val message: String?,
-        ) : Failure(message)
-        data class InternalServerError(
-            override val message: String?,
-        ) : Failure(message)
-    }
+    fun deleteProduct(id: String): Effect<DeleteProductFailure, Unit>
 
-    sealed class GetCategorySummaryFailure(
-        override val message: String?,
-    ) : Throwable(message) {
-        data class DataNotFound(
-            override val message: String?,
-        ) : GetCategorySummaryFailure(message)
-        data class InternalServerError(
-            override val message: String?,
-        ) : GetCategorySummaryFailure(message)
-    }
+    sealed interface GetSummaryFailure
+    sealed interface GetCheapestBrandFailure
+    sealed interface CreateProductFailure
+    sealed interface UpdateProductFailure
+    sealed interface DeleteProductFailure
 
-    sealed class CreateProductFailure(
-        override val message: String?,
-    ) : Throwable(message) {
-        data class BrandNameAlreadyExists(
-            override val message: String?,
-        ) : CreateProductFailure(message)
-        data class InternalServerError(
-            override val message: String?,
-        ) : CreateProductFailure(message)
-    }
-
-    sealed class UpdateProductFailure(
-        override val message: String?,
-    ) : Throwable(message) {
-        data class BrandNotFound(
-            override val message: String?,
-        ) : UpdateProductFailure(message)
-        data class BrandNameAlreadyExists(
-            override val message: String?,
-        ) : UpdateProductFailure(message)
-        data class InternalServerError(
-            override val message: String?,
-        ) : UpdateProductFailure(message)
-    }
-
-    sealed class DeleteProductFailure(
-        override val message: String?,
-    ) : Throwable(message) {
-        data class BrandNotFound(
-            override val message: String?,
-        ) : DeleteProductFailure(message)
-        data class InternalServerError(
-            override val message: String?,
-        ) : DeleteProductFailure(message)
-    }
+    data object BrandNotFound : GetCheapestBrandFailure, CreateProductFailure, UpdateProductFailure
+    data object ProductNotFound : GetSummaryFailure, GetCheapestBrandFailure, UpdateProductFailure, DeleteProductFailure
+    data class InternalError(val message: String?) :
+        GetSummaryFailure,
+        GetCheapestBrandFailure,
+        CreateProductFailure,
+        UpdateProductFailure,
+        DeleteProductFailure
 
     data class CheapestCombinationResult(
-        val top: CategoryItem,
-        val outer: CategoryItem,
-        val pants: CategoryItem,
-        val sneakers: CategoryItem,
-        val bag: CategoryItem,
-        val cap: CategoryItem,
-        val socks: CategoryItem,
-        val accessory: CategoryItem,
+        val categories: Map<Product.Category, CategoryItem>,
         val total: Int,
     )
 
     data class CheapestBrandResult(
         val brandName: String,
-        val brandItems: List<BrandItem>,
+        val categories: Map<Product.Category, Product>,
         val total: Int,
     )
 

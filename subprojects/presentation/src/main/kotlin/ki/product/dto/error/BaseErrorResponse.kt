@@ -6,6 +6,7 @@ import kotlinx.serialization.Transient
 
 @Serializable
 abstract class BaseErrorResponse {
+    abstract val errorCode: Int
     abstract val detail: String?
 
     @Transient open val statusCode: HttpStatusCode = HttpStatusCode.InternalServerError

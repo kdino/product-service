@@ -9,286 +9,171 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 import io.mockk.coEvery
 import io.mockk.mockk
+import ki.product.model.Brand
 import ki.product.model.CategoryItem
 import ki.product.model.Product
+import ki.product.repository.BrandRepository
 import ki.product.repository.ProductRepository
 import ki.product.service.ProductService
-import ki.product.service.ProductService.CreateProductFailure
 import ki.product.service.ProductServiceImpl
 
 class ProductServiceTest : FreeSpec({
     "ProductServiceTest" - {
         val productRepository = mockk<ProductRepository>()
-        val productService = ProductServiceImpl(productRepository)
+        val brandRepository = mockk<BrandRepository>()
+        val productService = ProductServiceImpl(
+            productRepository,
+            brandRepository,
+        )
 
         "createProductTest" - {
+            val brand = Brand.create("MyBrand")
             val product = Product.create(
-                Product.CreateCommand(
-                    brandName = "ki",
-                    top = 1000,
-                    outer = 2000,
-                    pants = 3000,
-                    sneakers = 4000,
-                    bag = 5000,
-                    cap = 6000,
-                    socks = 7000,
-                    accessory = 8000,
-                ),
+                price = 1000,
+                brand = brand,
+                category = Product.Category.CAP,
             )
 
             "success" {
                 coEvery {
-                    productRepository.getProductByBrandName(product.brandName)
+                    brandRepository.getById(brand.id)
+                } returns effect { brand }
+
+                coEvery {
+                    productRepository.create(any())
+                } returns effect { product }
+
+                productService.createProduct(
+                    Product.CreateCommand(
+                        price = 1000,
+                        brandId = brand.id,
+                        category = Product.Category.CAP,
+                    ),
+                ).toEither().shouldBeRight()
+            }
+
+            "fails if brand is not found" {
+                coEvery {
+                    brandRepository.getById(brand.id)
                 } returns effect { null }
 
-                coEvery {
-                    productRepository.createProduct(product)
-                } returns effect { product }
-
-                productService.createProduct(product).toEither().shouldBeRight()
-            }
-
-            "fails if product name already exists" {
-                val alreadySavedProduct = Product.create(
+                productService.createProduct(
                     Product.CreateCommand(
-                        brandName = "ki",
-                        top = 1000,
-                        outer = 2000,
-                        pants = 3000,
-                        sneakers = 4000,
-                        bag = 5000,
-                        cap = 6000,
-                        socks = 7000,
-                        accessory = 8000,
+                        price = 1000,
+                        brandId = brand.id,
+                        category = Product.Category.CAP,
                     ),
-                )
-
-                coEvery {
-                    productRepository.getProductByBrandName(product.brandName)
-                } returns effect { alreadySavedProduct }
-
-                coEvery {
-                    productRepository.createProduct(product)
-                } returns effect { product }
-
-                productService.createProduct(product).toEither()
+                ).toEither()
                     .shouldBeLeft()
-                    .shouldBeTypeOf<CreateProductFailure.BrandNameAlreadyExists>()
-            }
-
-            "fails if internal error in repository" {
-                coEvery {
-                    productRepository.getProductByBrandName(product.brandName)
-                } returns effect { raise(ProductRepository.Failure.DbError()) }
-
-                coEvery {
-                    productRepository.createProduct(product)
-                } returns effect { product }
-
-                productService.createProduct(product).toEither()
-                    .shouldBeLeft()
-                    .shouldBeTypeOf<CreateProductFailure.InternalServerError>()
-            }
-        }
-
-        "getProductTest" - {
-            val product = Product.create(
-                Product.CreateCommand(
-                    brandName = "ki",
-                    top = 1000,
-                    outer = 2000,
-                    pants = 3000,
-                    sneakers = 4000,
-                    bag = 5000,
-                    cap = 6000,
-                    socks = 7000,
-                    accessory = 8000,
-                ),
-            )
-
-            "success" {
-                coEvery {
-                    productRepository.getProduct(product.brandName)
-                } returns effect { product }
-
-                productService.getProduct(product.brandName).toEither().shouldBeRight()
-            }
-
-            "fails if target brandName does not exist" {
-                coEvery {
-                    productRepository.getProduct(product.brandName)
-                } returns effect { raise(ProductRepository.ReadFailure.NoData()) }
-
-                productService.getProduct(product.brandName).toEither()
-                    .shouldBeLeft()
-                    .shouldBeTypeOf<ProductService.Failure.DataNotFound>()
-            }
-
-            "fails if internal error in repository" {
-                coEvery {
-                    productRepository.getProduct(product.brandName)
-                } returns effect { raise(ProductRepository.ReadFailure.DbError()) }
-
-                productService.getProduct(product.brandName).toEither()
-                    .shouldBeLeft()
-                    .shouldBeTypeOf<ProductService.Failure.InternalServerError>()
+                    .shouldBeTypeOf<ProductService.BrandNotFound>()
             }
         }
 
         "updateProductTest" - {
+            val brand = Brand.create("MyBrand")
+            val newBrand = Brand.create("newBrand")
             val oldProduct = Product.create(
-                Product.CreateCommand(
-                    brandName = "ki",
-                    top = 1000,
-                    outer = 2000,
-                    pants = 3000,
-                    sneakers = 4000,
-                    bag = 5000,
-                    cap = 6000,
-                    socks = 7000,
-                    accessory = 8000,
-                ),
+                price = 1000,
+                brand = brand,
+                category = Product.Category.CAP,
             )
 
-            val updateProductCommand =
-                Product.UpdateCommand(
-                    brandName = "new_ki",
-                    top = 2000,
-                    outer = 3000,
-                    pants = 3000,
-                    sneakers = 5000,
-                    bag = 5000,
-                    cap = 6000,
-                    socks = 7000,
-                    accessory = 4000,
-                )
-
-            val newProduct = oldProduct.update(updateProductCommand)
+            val newProduct = oldProduct.update(
+                price = 2000,
+                brand = null,
+                category = null,
+            )
 
             "success" {
                 coEvery {
-                    productRepository.getProductByBrandName(oldProduct.brandName)
+                    productRepository.get(oldProduct.id)
                 } returns effect { oldProduct }
 
                 coEvery {
-                    productRepository.getProductByBrandName(newProduct.brandName)
-                } returns effect { null }
+                    brandRepository.getById(oldProduct.brand.id)
+                } returns effect { brand }
 
                 coEvery {
-                    productRepository.updateProduct(newProduct)
+                    productRepository.update(newProduct)
                 } returns effect { newProduct }
 
-                productService.updateProduct(oldProduct.brandName, updateProductCommand).toEither().shouldBeRight()
+                productService.updateProduct(
+                    id = oldProduct.id,
+                    command = Product.UpdateCommand(
+                        price = 2000,
+                        brandId = null,
+                        category = null,
+                    ),
+                ).toEither().shouldBeRight()
             }
 
-            "fails if changing brandName already exists" {
+            "fails if target product is not found" {
                 coEvery {
-                    productRepository.getProductByBrandName(oldProduct.brandName)
+                    productRepository.get(oldProduct.id)
+                } returns effect { null }
+
+                productService.updateProduct(
+                    id = oldProduct.id,
+                    command = Product.UpdateCommand(
+                        price = 2000,
+                        brandId = null,
+                        category = null,
+                    ),
+                ).toEither()
+                    .shouldBeLeft()
+                    .shouldBeTypeOf<ProductService.ProductNotFound>()
+            }
+
+            "fails if changing brand does not exist" {
+                coEvery {
+                    productRepository.get(oldProduct.id)
                 } returns effect { oldProduct }
 
                 coEvery {
-                    productRepository.getProductByBrandName(newProduct.brandName)
-                } returns effect { newProduct }
-
-                coEvery {
-                    productRepository.updateProduct(newProduct)
-                } returns effect { newProduct }
-
-                productService.updateProduct(oldProduct.brandName, updateProductCommand).toEither()
-                    .shouldBeLeft()
-                    .shouldBeTypeOf<ProductService.UpdateProductFailure.BrandNameAlreadyExists>()
-            }
-
-            "fails if target brandName does not exist" {
-                coEvery {
-                    productRepository.getProductByBrandName(oldProduct.brandName)
+                    brandRepository.getById(newBrand.id)
                 } returns effect { null }
 
-                coEvery {
-                    productRepository.getProductByBrandName(newProduct.brandName)
-                } returns effect { null }
-
-                coEvery {
-                    productRepository.updateProduct(newProduct)
-                } returns effect { newProduct }
-
-                productService.updateProduct(oldProduct.brandName, updateProductCommand).toEither()
+                productService.updateProduct(
+                    id = oldProduct.id,
+                    command = Product.UpdateCommand(
+                        price = 2000,
+                        brandId = newBrand.id,
+                        category = null,
+                    ),
+                ).toEither()
                     .shouldBeLeft()
-                    .shouldBeTypeOf<ProductService.UpdateProductFailure.BrandNotFound>()
-            }
-
-            "fails if internal error in repository" {
-                coEvery {
-                    productRepository.getProductByBrandName(oldProduct.brandName)
-                } returns effect { raise(ProductRepository.Failure.DbError()) }
-
-                coEvery {
-                    productRepository.getProductByBrandName(newProduct.brandName)
-                } returns effect { null }
-
-                coEvery {
-                    productRepository.updateProduct(newProduct)
-                } returns effect { newProduct }
-
-                productService.updateProduct(oldProduct.brandName, updateProductCommand).toEither()
-                    .shouldBeLeft()
-                    .shouldBeTypeOf<ProductService.UpdateProductFailure.InternalServerError>()
+                    .shouldBeTypeOf<ProductService.BrandNotFound>()
             }
         }
 
         "deleteProductTest" - {
-            val product = Product.create(
-                Product.CreateCommand(
-                    brandName = "ki",
-                    top = 1000,
-                    outer = 2000,
-                    pants = 3000,
-                    sneakers = 4000,
-                    bag = 5000,
-                    cap = 6000,
-                    socks = 7000,
-                    accessory = 8000,
-                ),
+            val brand = Brand.create("MyBrand")
+            val oldProduct = Product.create(
+                price = 1000,
+                brand = brand,
+                category = Product.Category.CAP,
             )
 
             "success" {
                 coEvery {
-                    productRepository.getProductByBrandName(product.brandName)
-                } returns effect { product }
+                    productRepository.get(oldProduct.id)
+                } returns effect { oldProduct }
 
                 coEvery {
-                    productRepository.deleteProduct(product.brandName)
+                    productRepository.delete(oldProduct.id)
                 } returns effect {}
 
-                productService.deleteProduct(product.brandName).toEither().shouldBeRight()
+                productService.deleteProduct(oldProduct.id).toEither().shouldBeRight()
             }
 
-            "fails if target brandName does not exist" {
+            "fails if target product does not exist" {
                 coEvery {
-                    productRepository.getProductByBrandName(product.brandName)
+                    productRepository.get(oldProduct.id)
                 } returns effect { null }
 
-                coEvery {
-                    productRepository.deleteProduct(product.brandName)
-                } returns effect {}
-
-                productService.deleteProduct(product.brandName).toEither()
+                productService.deleteProduct(oldProduct.id).toEither()
                     .shouldBeLeft()
-                    .shouldBeTypeOf<ProductService.DeleteProductFailure.BrandNotFound>()
-            }
-
-            "fails if internal error in repository" {
-                coEvery {
-                    productRepository.getProductByBrandName(product.brandName)
-                } returns effect { raise(ProductRepository.Failure.DbError()) }
-
-                coEvery {
-                    productRepository.deleteProduct(product.brandName)
-                } returns effect {}
-
-                productService.deleteProduct(product.brandName).toEither()
-                    .shouldBeLeft()
-                    .shouldBeTypeOf<ProductService.DeleteProductFailure.InternalServerError>()
+                    .shouldBeTypeOf<ProductService.ProductNotFound>()
             }
         }
 
@@ -333,69 +218,75 @@ class ProductServiceTest : FreeSpec({
                 val result = productService.getCheapestCombination().toEither().shouldBeRight()
                 result.total shouldBe total
             }
-
-            "fails if there is no data" {
-                coEvery {
-                    productRepository.getCheapestItemByCategory(Product.Category.TOP)
-                } returns effect { raise(ProductRepository.ReadFailure.NoData()) }
-
-                productService.getCheapestCombination().toEither()
-                    .shouldBeLeft()
-                    .shouldBeTypeOf<ProductService.Failure.DataNotFound>()
-            }
-
-            "fails if internal error in repository" {
-                coEvery {
-                    productRepository.getCheapestItemByCategory(Product.Category.TOP)
-                } returns effect { raise(ProductRepository.ReadFailure.DbError()) }
-
-                productService.getCheapestCombination().toEither()
-                    .shouldBeLeft()
-                    .shouldBeTypeOf<ProductService.Failure.InternalServerError>()
-            }
         }
 
         "getCheapestBrand" - {
-            val product = Product.create(
-                Product.CreateCommand(
-                    brandName = "ki",
-                    top = 1000,
-                    outer = 2000,
-                    pants = 3000,
-                    sneakers = 4000,
-                    bag = 5000,
-                    cap = 6000,
-                    socks = 7000,
-                    accessory = 8000,
+            val brand = Brand.create("MyBrand")
+            val products = listOf(
+                Product.create(
+                    price = 1000,
+                    brand = brand,
+                    category = Product.Category.CAP,
+                ),
+                Product.create(
+                    price = 1000,
+                    brand = brand,
+                    category = Product.Category.OUTER,
+                ),
+                Product.create(
+                    price = 1000,
+                    brand = brand,
+                    category = Product.Category.BAG,
+                ),
+                Product.create(
+                    price = 1000,
+                    brand = brand,
+                    category = Product.Category.SOCKS,
+                ),
+                Product.create(
+                    price = 1000,
+                    brand = brand,
+                    category = Product.Category.PANTS,
+                ),
+                Product.create(
+                    price = 1000,
+                    brand = brand,
+                    category = Product.Category.SNEAKERS,
+                ),
+                Product.create(
+                    price = 1000,
+                    brand = brand,
+                    category = Product.Category.TOP,
+                ),
+                Product.create(
+                    price = 1000,
+                    brand = brand,
+                    category = Product.Category.ACCESSORY,
                 ),
             )
 
             "success" {
                 coEvery {
-                    productRepository.getCheapestBrand()
-                } returns effect { product }
+                    brandRepository.getAll()
+                } returns effect { listOf(brand) }
 
-                productService.getCheapestBrand().toEither().shouldBeRight()
+                coEvery {
+                    productRepository.getProductsByBrandId(brand.id)
+                } returns effect { products }
+
+                val result = productService.getCheapestBrand().toEither().shouldBeRight()
+                result.total shouldBe 8000
+                result.brandName shouldBe "MyBrand"
             }
 
-            "fails if there is no data" {
+            "fails if there is no brand exists" {
                 coEvery {
-                    productRepository.getCheapestBrand()
-                } returns effect { raise(ProductRepository.ReadFailure.NoData()) }
+                    brandRepository.getAll()
+                } returns effect { listOf() }
 
                 productService.getCheapestBrand().toEither()
                     .shouldBeLeft()
-                    .shouldBeTypeOf<ProductService.Failure.DataNotFound>()
-            }
-
-            "fails if internal error in repository" {
-                coEvery {
-                    productRepository.getCheapestBrand()
-                } returns effect { raise(ProductRepository.ReadFailure.DbError()) }
-
-                productService.getCheapestBrand().toEither()
-                    .shouldBeLeft()
-                    .shouldBeTypeOf<ProductService.Failure.InternalServerError>()
+                    .shouldBeTypeOf<ProductService.BrandNotFound>()
             }
         }
 
@@ -415,34 +306,6 @@ class ProductServiceTest : FreeSpec({
                 val result = productService.getCategorySummary(Product.Category.CAP).toEither().shouldBeRight()
                 result.cheapest.price shouldBe cheapest.price
                 result.mostExpensive.price shouldBe mostExpensive.price
-            }
-
-            "fails if there is no data" {
-                coEvery {
-                    productRepository.getCheapestItemByCategory(Product.Category.CAP)
-                } returns effect { raise(ProductRepository.ReadFailure.NoData()) }
-
-                coEvery {
-                    productRepository.getMostExpensiveItemByCategory(Product.Category.CAP)
-                } returns effect { raise(ProductRepository.ReadFailure.NoData()) }
-
-                productService.getCategorySummary(Product.Category.CAP).toEither()
-                    .shouldBeLeft()
-                    .shouldBeTypeOf<ProductService.GetCategorySummaryFailure.DataNotFound>()
-            }
-
-            "fails if internal error in repository" {
-                coEvery {
-                    productRepository.getCheapestItemByCategory(Product.Category.CAP)
-                } returns effect { raise(ProductRepository.ReadFailure.DbError()) }
-
-                coEvery {
-                    productRepository.getMostExpensiveItemByCategory(Product.Category.CAP)
-                } returns effect { raise(ProductRepository.ReadFailure.DbError()) }
-
-                productService.getCategorySummary(Product.Category.CAP).toEither()
-                    .shouldBeLeft()
-                    .shouldBeTypeOf<ProductService.GetCategorySummaryFailure.InternalServerError>()
             }
         }
     }

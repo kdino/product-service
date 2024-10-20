@@ -11,36 +11,36 @@ import ki.product.dto.response.ProductResponse.Product as ProductDto
 fun CheapestCombinationResult.toResponse() =
     CheapestCombinationResponse(
         top = CategoryItemDto(
-            brandName = top.brandName,
-            price = top.price,
+            brandName = this.categories[Product.Category.TOP]!!.brandName,
+            price = this.categories[Product.Category.TOP]!!.price,
         ),
         outer = CategoryItemDto(
-            brandName = outer.brandName,
-            price = outer.price,
+            brandName = this.categories[Product.Category.OUTER]!!.brandName,
+            price = this.categories[Product.Category.OUTER]!!.price,
         ),
         pants = CategoryItemDto(
-            brandName = pants.brandName,
-            price = pants.price,
+            brandName = this.categories[Product.Category.PANTS]!!.brandName,
+            price = this.categories[Product.Category.PANTS]!!.price,
         ),
         sneakers = CategoryItemDto(
-            brandName = sneakers.brandName,
-            price = sneakers.price,
+            brandName = this.categories[Product.Category.SNEAKERS]!!.brandName,
+            price = this.categories[Product.Category.SNEAKERS]!!.price,
         ),
         bag = CategoryItemDto(
-            brandName = bag.brandName,
-            price = bag.price,
+            brandName = this.categories[Product.Category.BAG]!!.brandName,
+            price = this.categories[Product.Category.BAG]!!.price,
         ),
         cap = CategoryItemDto(
-            brandName = cap.brandName,
-            price = cap.price,
+            brandName = this.categories[Product.Category.CAP]!!.brandName,
+            price = this.categories[Product.Category.CAP]!!.price,
         ),
         socks = CategoryItemDto(
-            brandName = socks.brandName,
-            price = socks.price,
+            brandName = this.categories[Product.Category.SOCKS]!!.brandName,
+            price = this.categories[Product.Category.SOCKS]!!.price,
         ),
         accessory = CategoryItemDto(
-            brandName = accessory.brandName,
-            price = accessory.price,
+            brandName = this.categories[Product.Category.ACCESSORY]!!.brandName,
+            price = this.categories[Product.Category.ACCESSORY]!!.price,
         ),
         total = total,
     )
@@ -49,10 +49,10 @@ fun CheapestBrandResult.toResponse() =
     CheapestBrandResponse(
         CheapestBrandResponse.CheapestPrice(
             brandName = brandName,
-            brandItems = brandItems.map {
+            brandItems = categories.map {
                 BrandItemDto(
-                    category = it.category.toResponse(),
-                    price = it.price,
+                    category = it.key.toResponse(),
+                    price = it.value.price,
                 )
             },
             total = total,
@@ -89,18 +89,10 @@ fun Product.toResponse() =
         result = "성공",
         product = ProductDto(
             id = id,
-            brandName = brandName,
-            top = top,
-            outer = outer,
-            pants = pants,
-            sneakers = sneakers,
-            bag = bag,
-            cap = cap,
-            socks = socks,
-            accessory = accessory,
-            total = total,
+            price = price,
+            brandName = brand.name,
+            category = category.toResponse(),
             created = created,
             modified = modified,
-            deleted = deleted,
         ),
     )

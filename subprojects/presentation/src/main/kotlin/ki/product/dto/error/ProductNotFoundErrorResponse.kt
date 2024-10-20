@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
 @Serializable
-class DataNotFoundResponse(
-    override val errorCode: Int,
-    override val detail: String? = "Data not found error",
+class ProductNotFoundErrorResponse(
+    override val errorCode: Int = 4002,
+    override val detail: String? = "상품을 찾을 수 없습니다.",
     @Transient
     override val statusCode: HttpStatusCode = HttpStatusCode.NotFound,
 ) : BaseErrorResponse()

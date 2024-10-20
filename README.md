@@ -5,10 +5,14 @@
 브랜드의 카테고리 별 가격 정보를 관리하는 서비스 입니다. 아래의 REST endpoint들을 제공합니다.
 | Method | Endpoint | Description |
 |-------------|----------------------------------|----------------------------------|
-| POST | /products | 제품을 생성합니다. |
-| GET | /products/brand/{brand} | 특정 브랜드의 제품 정보를 조회합니다.|
-| PUT | /products/brand/{brand} | 특정 브랜드의 제품 정보를 업데이트합니다.|
-| DELETE | /products/brand/{brand} | 특정 브랜드의 제품 정보를 삭제합니다.|
+| POST | /products | 상품을 추가합니다. |
+| GET | /products/{id} | 상품 정보를 조회합니다.|
+| PUT | /products/{id} | 상품 정보를 업데이트합니다.|
+| DELETE | /products/{id} | 상품을 삭제합니다.|
+| GET | /brands | 모든 브랜드 정보를 조회합니다.|
+| POST | /brands | 브랜드를 추가합니다.|
+| PUT | /brands/{id} | 브랜드 정보를 업데이트합니다.|
+| DELETE | /brands/{id} | 브랜드를 삭제합니다.|
 | GET | /products/cheapest/combination | 가장 저렴한 제품 조합 정보를 조회합니다.|
 | GET | /products/cheapest/brand | 모든 카테고리의 가격 합이 가장 저렴한 브랜드의 제품 정보를 조회합니다.|
 | GET | /products/category/{category} | 특정 카테고리의 최대/최저 가격 제품 정보를 조회합니다.|
@@ -53,3 +57,15 @@ EXPORT CONF_HOST_PORT=<API HOST PORT>
 # 전체 테스트 코드 실행
 ./gradlew test
 ```
+
+### Error Codes
+
+| Error Code | Description                 |
+|------------|-----------------------------|
+| 100        | Invalid request format      |
+| 101        | Unauthorized access         |
+| 102        | Missing required parameters |
+| 200        | Resource not found          |
+| 300        | Internal server error       |
+| 4000       | Database connection error   |
+| 5000       | 서버 에러                       |

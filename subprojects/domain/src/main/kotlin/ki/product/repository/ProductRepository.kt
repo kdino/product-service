@@ -5,37 +5,17 @@ import ki.product.model.CategoryItem
 import ki.product.model.Product
 
 interface ProductRepository {
-    fun getCheapestItemByCategory(category: Product.Category): Effect<ReadFailure, CategoryItem>
-    fun getMostExpensiveItemByCategory(category: Product.Category): Effect<ReadFailure, CategoryItem>
-    fun getCheapestBrand(): Effect<ReadFailure, Product>
-    fun getProductByBrandName(brandName: String): Effect<Failure, Product?>
-    fun createProduct(product: Product): Effect<Failure, Product>
-    fun getProduct(brandName: String): Effect<ReadFailure, Product>
-    fun updateProduct(product: Product): Effect<Failure, Product>
-    fun deleteProduct(brandName: String): Effect<Failure, Unit>
+    fun getCheapestItemByCategory(category: Product.Category): Effect<DbError, CategoryItem>
+    fun getMostExpensiveItemByCategory(category: Product.Category): Effect<DbError, CategoryItem>
+    fun getProductsByBrandId(brandId: String): Effect<DbError, List<Product>>
 
-    sealed class ReadFailure(
-        override val message: String?,
-        override val cause: Throwable?,
-    ) : Throwable(message, cause) {
-        data class DbError(
-            override val message: String? = null,
-            override val cause: Throwable? = null,
-        ) : ReadFailure(message, cause)
+    fun create(product: Product): Effect<DbError, Product>
+    fun get(id: String): Effect<DbError, Product?>
+    fun update(product: Product): Effect<DbError, Product>
+    fun delete(id: String): Effect<DbError, Unit>
 
-        data class NoData(
-            override val message: String? = null,
-            override val cause: Throwable? = null,
-        ) : ReadFailure(message, cause)
-    }
+    // 브랜드 추가를 위한 함수
+    fun bulkCreate(products: List<Product>): Effect<DbError, Unit>
 
-    sealed class Failure(
-        override val message: String?,
-        override val cause: Throwable?,
-    ) : Throwable(message, cause) {
-        data class DbError(
-            override val message: String? = null,
-            override val cause: Throwable? = null,
-        ) : Failure(message, cause)
-    }
+    data class DbError(val message: String?)
 }

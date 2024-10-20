@@ -1,19 +1,13 @@
 package ki.product.entity
 
+import ki.product.model.Product
 import org.jetbrains.exposed.sql.Table
 
 object Products : Table() {
-    val id = varchar("id", 127)
-    val brandName = varchar("brand_name", 127)
-    val top = integer("top")
-    val outer = integer("outer")
-    val pants = integer("pants")
-    val sneakers = integer("sneakers")
-    val bag = integer("bag")
-    val cap = integer("cap")
-    val socks = integer("socks")
-    val accessory = integer("accessory")
-    val total = integer("total")
+    val id = varchar("id", 127).uniqueIndex()
+    val brandId = varchar("brandId", 127)
+    val price = integer("price")
+    val category = enumerationByName("category", 31, Product.Category::class)
     val created = long("created")
     val modified = long("modified").nullable()
     val deleted = long("deleted").nullable()

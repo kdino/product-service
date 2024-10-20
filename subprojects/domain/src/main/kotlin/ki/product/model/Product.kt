@@ -6,81 +6,50 @@ import kotlinx.datetime.Instant
 
 data class Product(
     val id: String,
-    val brandName: String,
-    val top: Int,
-    val outer: Int,
-    val pants: Int,
-    val sneakers: Int,
-    val bag: Int,
-    val cap: Int,
-    val socks: Int,
-    val accessory: Int,
-    val total: Int,
+    val price: Int,
+    val brand: Brand,
+    val category: Category,
     val created: Instant,
     val modified: Instant? = null,
-    val deleted: Instant? = null,
 ) {
     companion object {
-        fun create(command: CreateCommand) =
+        fun create(price: Int, brand: Brand, category: Category) =
             Product(
                 id = Utils.generateId("product"),
-                brandName = command.brandName,
-                top = command.top,
-                outer = command.outer,
-                pants = command.pants,
-                sneakers = command.sneakers,
-                bag = command.bag,
-                cap = command.cap,
-                socks = command.socks,
-                accessory = command.accessory,
-                total = (
-                    command.top + command.outer + command.pants + command.sneakers +
-                        command.bag + command.cap + command.socks + command.accessory
-                    ),
+                price = price,
+                brand = brand,
+                category = category,
                 created = Clock.System.now(),
             )
     }
 
-    fun update(command: UpdateCommand) =
+    fun update(price: Int?, category: Category?, brand: Brand?) =
         copy(
-            brandName = command.brandName ?: brandName,
-            top = command.top ?: top,
-            outer = command.outer ?: outer,
-            pants = command.pants ?: pants,
-            sneakers = command.sneakers ?: sneakers,
-            bag = command.bag ?: bag,
-            cap = command.cap ?: cap,
-            socks = command.socks ?: socks,
-            accessory = command.accessory ?: accessory,
-            total = (command.top ?: 0) + (command.outer ?: 0) + (command.pants ?: 0) + (command.sneakers ?: 0) +
-                (command.bag ?: 0) + (command.cap ?: 0) + (command.socks ?: 0) + (command.accessory ?: 0),
+            price = price ?: this.price,
+            category = category ?: this.category,
+            brand = brand ?: this.brand,
         )
 
     data class CreateCommand(
-        val brandName: String,
-        val top: Int,
-        val outer: Int,
-        val pants: Int,
-        val sneakers: Int,
-        val bag: Int,
-        val cap: Int,
-        val socks: Int,
-        val accessory: Int,
+        val price: Int,
+        val brandId: String,
+        val category: Category,
     )
 
     data class UpdateCommand(
-        val brandName: String?,
-        val top: Int?,
-        val outer: Int?,
-        val pants: Int?,
-        val sneakers: Int?,
-        val bag: Int?,
-        val cap: Int?,
-        val socks: Int?,
-        val accessory: Int?,
+        val price: Int?,
+        val brandId: String?,
+        val category: Category?,
     )
 
     enum class Category {
-        TOP, OUTER, PANTS, SNEAKERS, BAG, CAP, SOCKS, ACCESSORY
+        TOP,
+        OUTER,
+        PANTS,
+        SNEAKERS,
+        BAG,
+        CAP,
+        SOCKS,
+        ACCESSORY,
     }
 }

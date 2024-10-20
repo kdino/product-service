@@ -3,17 +3,20 @@ package ki.product.repository
 import arrow.core.raise.Effect
 import arrow.core.raise.effect
 import ki.product.config.DatabaseFactory
+import ki.product.entity.Brands
 import ki.product.entity.Products
+import ki.product.model.Brand
 import ki.product.model.CategoryItem
 import ki.product.model.Product
-import ki.product.repository.ProductRepository.Failure
-import ki.product.repository.ProductRepository.ReadFailure
+import ki.product.repository.ProductRepository.DbError
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
@@ -21,190 +24,193 @@ import org.jetbrains.exposed.sql.update
 class ProductRepositoryImpl(
     private val databaseFactory: DatabaseFactory,
 ) : ProductRepository {
-    override fun getCheapestItemByCategory(category: Product.Category): Effect<ReadFailure, CategoryItem> = effect {
+    override fun getCheapestItemByCategory(category: Product.Category): Effect<DbError, CategoryItem> = {
         try {
             val result = databaseFactory.dbExec {
-                Products.selectAll()
-                    .where(Products.deleted eq null)
-                    .orderBy(category.toEntityColumn(), SortOrder.ASC).limit(1)
+                Products.join(Brands, JoinType.INNER, onColumn = Products.brandId, otherColumn = Brands.id)
+                    .selectAll()
+                    .where(
+                        (Products.category eq category) and (Products.deleted eq null),
+                    )
+                    .orderBy(Products.price, SortOrder.ASC).limit(1)
                     .first()
             }
 
             CategoryItem(
-                brandName = result[Products.brandName],
-                price = result[category.toEntityColumn()],
+                brandName = result[Brands.name],
+                price = result[Products.price],
             )
-        } catch (e: NoSuchElementException) {
-            raise(ReadFailure.NoData())
         } catch (e: Exception) {
-            raise(ReadFailure.DbError(e.message, e))
+            raise(DbError(e.message))
         }
     }
 
-    override fun getMostExpensiveItemByCategory(category: Product.Category): Effect<ReadFailure, CategoryItem> =
-        effect {
-            try {
-                val result = databaseFactory.dbExec {
-                    Products.selectAll()
-                        .where(Products.deleted eq null)
-                        .orderBy(category.toEntityColumn(), SortOrder.DESC).limit(1)
-                        .first()
-                }
-
-                CategoryItem(
-                    brandName = result[Products.brandName],
-                    price = result[category.toEntityColumn()],
-                )
-            } catch (e: NoSuchElementException) {
-                raise(ReadFailure.NoData())
-            } catch (e: Exception) {
-                raise(ReadFailure.DbError(e.message, e))
-            }
-        }
-
-    override fun getCheapestBrand(): Effect<ReadFailure, Product> = effect {
+    override fun getMostExpensiveItemByCategory(category: Product.Category): Effect<DbError, CategoryItem> = {
         try {
             val result = databaseFactory.dbExec {
-                Products.selectAll()
-                    .where(Products.deleted eq null)
-                    .orderBy(Products.total, SortOrder.ASC).limit(1)
+                Products.join(Brands, JoinType.INNER, onColumn = Products.brandId, otherColumn = Brands.id)
+                    .selectAll()
+                    .where(
+                        (Products.category eq category) and (Products.deleted eq null),
+                    )
+                    .orderBy(Products.price, SortOrder.DESC).limit(1)
                     .first()
             }
 
-            toDomainProduct(result)
-        } catch (e: NoSuchElementException) {
-            raise(ReadFailure.NoData())
+            CategoryItem(
+                brandName = result[Brands.name],
+                price = result[Products.price],
+            )
         } catch (e: Exception) {
-            raise(ReadFailure.DbError(e.message, e))
+            raise(DbError(e.message))
         }
     }
 
-    override fun getProductByBrandName(brandName: String): Effect<Failure, Product?> = effect {
+    override fun getProductsByBrandId(brandId: String): Effect<DbError, List<Product>> = {
         try {
-            val result = databaseFactory.dbExec {
-                Products.selectAll()
-                    .where((Products.brandName eq brandName) and (Products.deleted eq null))
+            databaseFactory.dbExec {
+                val brand = Brands.selectAll()
+                    .where(Brands.id eq brandId and (Brands.deleted eq null))
                     .first()
-            }
+                    .let { rowResult ->
+                        Brand(
+                            id = rowResult[Brands.id],
+                            name = rowResult[Brands.name],
+                            created = Instant.fromEpochMilliseconds(rowResult[Brands.created]),
+                            modified = rowResult[Brands.modified]?.let { Instant.fromEpochMilliseconds(it) },
+                        )
+                    }
 
-            toDomainProduct(result)
+                Products.selectAll()
+                    .where((Products.brandId eq brandId) and (Products.deleted eq null))
+                    .toList()
+                    .map {
+                        it.toDomainProduct(brand)
+                    }
+            }
         } catch (e: NoSuchElementException) {
-            null
+            emptyList()
         } catch (e: Exception) {
-            raise(Failure.DbError(e.message, e))
+            raise(DbError(e.message))
         }
     }
 
-    override fun createProduct(product: Product): Effect<Failure, Product> = effect {
+    override fun create(product: Product): Effect<DbError, Product> = effect {
         try {
             databaseFactory.dbExec {
                 Products.insert { products ->
                     products[id] = product.id
-                    products[brandName] = product.brandName
-                    products[top] = product.top
-                    products[outer] = product.outer
-                    products[pants] = product.pants
-                    products[sneakers] = product.sneakers
-                    products[bag] = product.bag
-                    products[cap] = product.cap
-                    products[socks] = product.socks
-                    products[accessory] = product.accessory
-                    products[total] = product.total
+                    products[price] = product.price
+                    products[brandId] = product.brand.id
+                    products[category] = product.category
                     products[created] = product.created.toEpochMilliseconds()
                 }
             }
 
             product
         } catch (e: Exception) {
-            raise(Failure.DbError(e.message, e))
+            raise(DbError(e.message))
         }
     }
 
-    override fun getProduct(brandName: String): Effect<ReadFailure, Product> = effect {
+    override fun get(id: String): Effect<DbError, Product?> = {
         try {
-            val result = databaseFactory.dbExec {
-                Products.selectAll()
-                    .where((Products.brandName eq brandName) and (Products.deleted eq null))
+            databaseFactory.dbExec {
+                Products.join(Brands, JoinType.INNER, onColumn = Products.brandId, otherColumn = Brands.id)
+                    .selectAll()
+                    .where(
+                        (Products.id eq id) and (Products.deleted eq null),
+                    )
                     .first()
+                    .toDomainProduct()
             }
-
-            toDomainProduct(result)
         } catch (e: NoSuchElementException) {
-            raise(ReadFailure.NoData())
+            null
         } catch (e: Exception) {
-            raise(ReadFailure.DbError(e.message, e))
+            raise(DbError(e.message))
         }
     }
 
-    override fun updateProduct(product: Product): Effect<Failure, Product> = effect {
+    override fun update(product: Product): Effect<DbError, Product> = effect {
         try {
             databaseFactory.dbExec {
                 Products.update({ (Products.id eq product.id) and (Products.deleted eq null) }) {
-                    it[brandName] = product.brandName
-                    it[top] = product.top
-                    it[outer] = product.outer
-                    it[pants] = product.pants
-                    it[sneakers] = product.sneakers
-                    it[bag] = product.bag
-                    it[cap] = product.cap
-                    it[socks] = product.socks
-                    it[accessory] = product.accessory
-                    it[total] = product.total
+                    it[price] = product.price
+                    it[brandId] = product.brand.id
+                    it[category] = product.category
                     it[modified] = Clock.System.now().toEpochMilliseconds()
                 }
             }
 
-            val updatedProduct = databaseFactory.dbExec {
-                Products.selectAll()
-                    .where((Products.id eq product.id) and (Products.deleted eq null))
-                    .first()
-            }
-
-            toDomainProduct(updatedProduct)
+            product
         } catch (e: Exception) {
-            raise(Failure.DbError(e.message, e))
+            raise(DbError(e.message))
         }
     }
 
-    override fun deleteProduct(brandName: String): Effect<Failure, Unit> = effect {
+    override fun delete(id: String): Effect<DbError, Unit> = effect {
         try {
             databaseFactory.dbExec {
-                Products.update({ (Products.brandName eq brandName) and (Products.deleted eq null) }) {
+                Products.update({ (Products.id eq id) and (Products.deleted eq null) }) {
                     it[deleted] = Clock.System.now().toEpochMilliseconds()
                 }
             }
         } catch (e: Exception) {
-            raise(Failure.DbError(e.message, e))
+            raise(DbError(e.message))
         }
     }
 
-    private fun toDomainProduct(row: ResultRow): Product =
+    override fun bulkCreate(products: List<Product>): Effect<DbError, Unit> = {
+        try {
+            databaseFactory.dbExec {
+                Products.batchInsert(products) { product ->
+                    this[Products.id] = product.id
+                    this[Products.brandId] = product.brand.id
+                    this[Products.price] = product.price
+                    this[Products.category] = product.category
+                    this[Products.created] = product.created.toEpochMilliseconds()
+                    this[Products.modified] = product.created.toEpochMilliseconds()
+                }
+            }
+        } catch (e: Exception) {
+            raise(DbError(e.message))
+        }
+    }
+
+    private fun ResultRow.toDomainProduct(): Product =
         Product(
-            id = row[Products.id],
-            brandName = row[Products.brandName],
-            top = row[Products.top],
-            outer = row[Products.outer],
-            pants = row[Products.pants],
-            sneakers = row[Products.sneakers],
-            bag = row[Products.bag],
-            cap = row[Products.cap],
-            socks = row[Products.socks],
-            accessory = row[Products.accessory],
-            total = row[Products.total],
-            created = Instant.fromEpochMilliseconds(row[Products.created]),
-            modified = row[Products.modified]?.let { Instant.fromEpochMilliseconds(it) },
-            deleted = row[Products.deleted]?.let { Instant.fromEpochMilliseconds(it) },
+            id = this[Products.id],
+            brand = Brand(
+                id = this[Brands.id],
+                name = this[Brands.name],
+                created = Instant.fromEpochMilliseconds(this[Brands.created]),
+                modified = this[Brands.modified]?.let { Instant.fromEpochMilliseconds(it) },
+            ),
+            price = this[Products.price],
+            category = this[Products.category],
+            created = Instant.fromEpochMilliseconds(this[Products.created]),
+            modified = this[Products.modified]?.let { Instant.fromEpochMilliseconds(it) },
+        )
+
+    private fun ResultRow.toDomainProduct(brand: Brand): Product =
+        Product(
+            id = this[Products.id],
+            brand = brand,
+            price = this[Products.price],
+            category = this[Products.category],
+            created = Instant.fromEpochMilliseconds(this[Products.created]),
+            modified = this[Products.modified]?.let { Instant.fromEpochMilliseconds(it) },
         )
 
     private fun Product.Category.toEntityColumn() =
         when (this) {
-            Product.Category.TOP -> Products.top
-            Product.Category.OUTER -> Products.outer
-            Product.Category.PANTS -> Products.pants
-            Product.Category.SNEAKERS -> Products.sneakers
-            Product.Category.BAG -> Products.bag
-            Product.Category.CAP -> Products.cap
-            Product.Category.SOCKS -> Products.socks
-            Product.Category.ACCESSORY -> Products.accessory
+            Product.Category.TOP -> "top"
+            Product.Category.OUTER -> "outer"
+            Product.Category.PANTS -> "pants"
+            Product.Category.SNEAKERS -> "sneakers"
+            Product.Category.BAG -> "bag"
+            Product.Category.CAP -> "cap"
+            Product.Category.SOCKS -> "socks"
+            Product.Category.ACCESSORY -> "accessory"
         }
 }

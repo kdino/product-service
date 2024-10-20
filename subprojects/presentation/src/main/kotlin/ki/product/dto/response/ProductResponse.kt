@@ -12,17 +12,10 @@ data class ProductResponse(
     @Serializable
     data class Product(
         val id: String,
+        val price: Int,
         @SerialName("brand_name")
         val brandName: String,
-        val top: Int,
-        val outer: Int,
-        val pants: Int,
-        val sneakers: Int,
-        val bag: Int,
-        val cap: Int,
-        val socks: Int,
-        val accessory: Int,
-        val total: Int,
+        val category: String,
         val created: Instant,
         val modified: Instant? = null,
         val deleted: Instant? = null,
