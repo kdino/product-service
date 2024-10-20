@@ -2,7 +2,7 @@
 
 ### About
 
-브랜드의 카테고리 별 가격 정보를 관리하는 서비스 입니다. 아래의 REST endpoint들을 제공합니다.
+브랜드와 상품 정보를 관리하는 서비스 입니다. 아래의 REST endpoint들을 제공합니다.
 | Method | Endpoint | Description |
 |-------------|----------------------------------|----------------------------------|
 | POST | /products | 상품을 추가합니다. |
@@ -17,7 +17,7 @@
 | GET | /products/cheapest/brand | 모든 카테고리의 가격 합이 가장 저렴한 브랜드의 제품 정보를 조회합니다.|
 | GET | /products/category/{category} | 특정 카테고리의 최대/최저 가격 제품 정보를 조회합니다.|
 
-[<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://god.gw.postman.com/run-collection/23973713-a9cb642a-85c1-4cb7-ac77-6b29de5f118d?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D23973713-a9cb642a-85c1-4cb7-ac77-6b29de5f118d%26entityType%3Dcollection%26workspaceId%3D372cb8e5-7552-4f4e-ad00-135f88fc28f3)
+[<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://www.postman.com/kdino/ki-workspace/collection/0r7y04e/product-service?action=share&creator=2680338)
 
 ### Tech Stack
 
@@ -60,12 +60,14 @@ EXPORT CONF_HOST_PORT=<API HOST PORT>
 
 ### Error Codes
 
-| Error Code | Description                 |
-|------------|-----------------------------|
-| 100        | Invalid request format      |
-| 101        | Unauthorized access         |
-| 102        | Missing required parameters |
-| 200        | Resource not found          |
-| 300        | Internal server error       |
-| 4000       | Database connection error   |
-| 5000       | 서버 에러                       |
+| Error Code | Description       |
+|------------|-------------------|
+| 2001       | 매칭되는 카테고리가 없습니다.  |
+| 2002       | 브랜드 이름이 이미 존재합니다. |
+| 4001       | 브랜드를 찾을 수 없습니다.   |
+| 4002       | 상품을 찾을 수 없습니다.    |
+| 5000       | 서버 에러             |
+
+### 추가 필요한 예외처리
+* 상품을 삭제할 때, 카테고리의 마지막 상품인 경우 실패 처리
+* 브랜드를 삭제할 때, 속해있는 상품들도 함께 삭제 처리

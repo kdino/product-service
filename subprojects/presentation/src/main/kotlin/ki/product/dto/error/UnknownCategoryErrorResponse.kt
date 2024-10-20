@@ -6,7 +6,7 @@ import kotlinx.serialization.Transient
 
 @Serializable
 class UnknownCategoryErrorResponse(
-    override val errorCode: Int = 2002,
+    override val errorCode: Int = 2001,
     override val detail: String? = "매칭되는 카테고리가 없습니다.",
     @Transient
     override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest,
