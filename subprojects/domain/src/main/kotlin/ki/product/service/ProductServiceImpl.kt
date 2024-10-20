@@ -11,7 +11,7 @@ import ki.product.service.ProductService.CheapestBrandResult
 import ki.product.service.ProductService.CheapestCombinationResult
 import ki.product.service.ProductService.CreateProductFailure
 import ki.product.service.ProductService.DeleteProductFailure
-import ki.product.service.ProductService.GetSummaryFailure
+import ki.product.service.ProductService.GetProductFailure
 import ki.product.service.ProductService.UpdateProductFailure
 
 class ProductServiceImpl(
@@ -19,7 +19,7 @@ class ProductServiceImpl(
     private val brandRepository: BrandRepository,
 ) : ProductService {
 
-    override fun getCheapestCombination(): Effect<GetSummaryFailure, CheapestCombinationResult> = {
+    override fun getCheapestCombination(): Effect<GetProductFailure, CheapestCombinationResult> = {
         val cheapestPriceMap = Product.Category.values().associateWith { category ->
             productRepository.getCheapestItemByCategory(category)
                 .mapError { ProductService.InternalError(it.message) }.bind()
@@ -66,7 +66,7 @@ class ProductServiceImpl(
 
     override fun getCategorySummary(
         category: Product.Category,
-    ): Effect<GetSummaryFailure, CategorySummaryResult> = {
+    ): Effect<GetProductFailure, CategorySummaryResult> = {
         val cheapest = productRepository.getCheapestItemByCategory(category).mapError {
             ProductService.InternalError(it.message)
         }.bind()
@@ -97,6 +97,13 @@ class ProductServiceImpl(
         productRepository.create(product).mapError {
             ProductService.InternalError(it.message)
         }.bind()
+    }
+
+    override fun getProduct(id: String): Effect<GetProductFailure, Product> = {
+        productRepository.get(id).mapError {
+            ProductService.InternalError(it.message)
+        }.bind()
+            ?: raise(ProductService.ProductNotFound) // 브랜드가 없는 경우 에러처리
     }
 
     override fun updateProduct(

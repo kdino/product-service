@@ -95,6 +95,24 @@ object ProductRouting {
             )
         }
 
+        get("/products/{id}") {
+            val id = call.parameters["id"]!!
+
+            productService.getProduct(id).mapError {
+                when (it) {
+                    is ProductService.InternalError -> InternalErrorResponse(detail = it.message)
+                    ProductService.ProductNotFound -> ProductNotFoundErrorResponse()
+                }
+            }.fold(
+                recover = {
+                    call.respondError(it)
+                },
+                transform = {
+                    call.respond(it.toResponse())
+                },
+            )
+        }
+
         put("/products/{id}") {
             val id = call.parameters["id"]!!
             val updateProductRequest = call.receive<UpdateProductRequest>()

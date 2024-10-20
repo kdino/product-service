@@ -5,10 +5,11 @@ import ki.product.model.CategoryItem
 import ki.product.model.Product
 
 interface ProductService {
-    fun getCheapestCombination(): Effect<GetSummaryFailure, CheapestCombinationResult>
+    fun getCheapestCombination(): Effect<GetProductFailure, CheapestCombinationResult>
     fun getCheapestBrand(): Effect<GetCheapestBrandFailure, CheapestBrandResult>
-    fun getCategorySummary(category: Product.Category): Effect<GetSummaryFailure, CategorySummaryResult>
+    fun getCategorySummary(category: Product.Category): Effect<GetProductFailure, CategorySummaryResult>
     fun createProduct(command: Product.CreateCommand): Effect<CreateProductFailure, Product>
+    fun getProduct(id: String): Effect<GetProductFailure, Product>
     fun updateProduct(
         id: String,
         command: Product.UpdateCommand,
@@ -16,16 +17,16 @@ interface ProductService {
 
     fun deleteProduct(id: String): Effect<DeleteProductFailure, Unit>
 
-    sealed interface GetSummaryFailure
+    sealed interface GetProductFailure
     sealed interface GetCheapestBrandFailure
     sealed interface CreateProductFailure
     sealed interface UpdateProductFailure
     sealed interface DeleteProductFailure
 
     data object BrandNotFound : GetCheapestBrandFailure, CreateProductFailure, UpdateProductFailure
-    data object ProductNotFound : GetSummaryFailure, GetCheapestBrandFailure, UpdateProductFailure, DeleteProductFailure
+    data object ProductNotFound : GetProductFailure, GetCheapestBrandFailure, UpdateProductFailure, DeleteProductFailure
     data class InternalError(val message: String?) :
-        GetSummaryFailure,
+        GetProductFailure,
         GetCheapestBrandFailure,
         CreateProductFailure,
         UpdateProductFailure,
